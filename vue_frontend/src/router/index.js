@@ -1,0 +1,72 @@
+import { createRouter, createWebHistory } from 'vue-router'
+import Login from '../views/Login.vue'
+import UserFeed from '../views/UserFeed.vue'
+import ModeratorDashboard from '../views/Mod_Dashboard.vue'
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes: [
+    {
+      path: '/',
+      redirect: '/login'
+    },
+    {
+      path: '/login',
+      name: 'Login',
+      component: Login
+    },
+    {
+      path: '/feed',
+      name: 'UserFeed',
+      component: UserFeed,
+      meta: { requiresAuth: true, role: 'user' }
+    },
+    {
+      path: '/mod-dashboard',
+      name: 'Mod_Dashboard', 
+      component: Mod_Dashboard,
+      meta: { requiresAuth: true, role: 'moderator' }
+    }
+  ]
+})
+
+// Navigation guard for authentication
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('token')
+  const userStr = localStorage.getItem('user')
+  const user = userStr ? JSON.parse(userStr) : null
+
+  // Check if route requires authentication
+  if (to.meta.requiresAuth) {
+    if (!token || !user) {
+      // Redirect to login if not authenticated
+      next('/login')
+      return
+    }
+
+    // Check role-based access
+    if (to.meta.role && user.role !== to.meta.role) {
+      // Redirect based on user role
+      if (user.role === 'moderator') {
+        next('/mod-dashboard')
+      } else {
+        next('/feed')
+      }
+      return
+    }
+  }
+
+  // If already logged in and trying to access login page
+  if (to.path === '/login' && token && user) {
+    if (user.role === 'moderator') {
+      next('/mod-dashboard')
+    } else {
+      next('/feed')
+    }
+    return
+  }
+
+  next()
+})
+
+export default router
