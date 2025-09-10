@@ -1,0 +1,25 @@
+/* Global styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #ffffff;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+#vite-dev-overlay,
+[data-vite-dev-overlay],
+div[style*="position: fixed"][style*="bottom: 0"] {
+  display: none !important;
+}
+
+.vite-dev-overlay {
+  display: none !important;
+}

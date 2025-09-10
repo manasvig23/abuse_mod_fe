@@ -13,25 +13,29 @@ const router = createRouter({
     {
       path: '/login',
       name: 'Login',
-      component: Login
+      component: Login,
+      meta: { title: 'Login - Abuse Moderation' }
     },
     {
       path: '/feed',
       name: 'UserFeed',
       component: UserFeed,
-      meta: { requiresAuth: true, role: 'user' }
+      meta: { requiresAuth: true, role: 'user', title: 'Feed - Abuse Moderation' }
     },
     {
       path: '/mod-dashboard',
-      name: 'Mod_Dashboard', 
-      component: Mod_Dashboard,
-      meta: { requiresAuth: true, role: 'moderator' }
+      name: 'ModeratorDashboard', 
+      component: ModeratorDashboard,
+      meta: { requiresAuth: true, role: 'moderator', title: 'Dashboard - Abuse Moderation' }
     }
   ]
 })
 
 // Navigation guard for authentication
 router.beforeEach((to, from, next) => {
+  // Set page title
+  document.title = to.meta.title || 'Abuse Moderation System'
+  
   const token = localStorage.getItem('token')
   const userStr = localStorage.getItem('user')
   const user = userStr ? JSON.parse(userStr) : null

@@ -1,0 +1,119 @@
+import axios from 'axios'
+
+const API_BASE_URL = 'http://localhost:8001'
+
+// Create axios instance with base configuration
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000,
+})
+
+// Request interceptor to add auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
+
+// Response interceptor for error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expired or invalid
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
+  }
+)
+
+// Authentication API
+export const authAPI = {
+  async login(credentials) {
+    const response = await api.post('/api/login', credentials)
+    return response.data
+  },
+
+  async register(userData) {
+    const response = await api.post('/api/register', userData)
+    return response.data
+  }
+}
+
+// User API
+export const userAPI = {
+  async getMyPosts() {
+    const response = await api.get('/api/user/my-posts')
+    return response.data
+  },
+
+  async getExploreFeed() {
+    const response = await api.get('/api/user/explore-feed')
+    return response.data
+  },
+
+  async createPost(postData) {
+    const response = await api.post('/api/posts/', postData)
+    return response.data
+  },
+
+  async createComment(commentData) {
+    const response = await api.post('/api/comments/', commentData)
+    return response.data
+  }
+}
+
+// Moderator API
+export const moderatorAPI = {
+  async getAllUsers() {
+    const response = await api.get('/api/moderator/users')
+    return response.data
+  },
+
+  async getAllPosts(userId = null) {
+    const params = userId ? { user_id: userId } : {}
+    const response = await api.get('/api/moderator/all-posts', { params })
+    return response.data
+  },
+
+  async getPostsForReview() {
+    const response = await api.get('/api/moderator/posts-for-review')
+    return response.data
+  },
+
+  async getPostForReview(postId) {
+    const response = await api.get(`/api/moderator/posts/${postId}/review`)
+    return response.data
+  },
+
+  async getFlaggedComments(userId = null) {
+    const params = userId ? { user_id: userId } : {}
+    const response = await api.get('/api/moderator/flagged-comments', { params })
+    return response.data
+  },
+
+  async getStatistics(userId = null) {
+    const params = userId ? { user_id: userId } : {}
+    const response = await api.get('/api/moderator/statistics', { params })
+    return response.data
+  },
+
+  async reviewComment(commentId, action, reason = '') {
+    const response = await api.put(`/api/moderator/comments/${commentId}/review`, {
+      action,
+      reason
+    })
+    return response.data
+  }
+}
+
+export default api
