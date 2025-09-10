@@ -1,7 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Login from '../views/Login.vue'
+import Registration from '../views/Registration.vue'
 import UserFeed from '../views/UserFeed.vue'
-import ModeratorDashboard from '../views/Mod_Dashboard.vue'
+import ModeratorDashboard from '../views/ModeratorDashboard.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -15,6 +16,12 @@ const router = createRouter({
       name: 'Login',
       component: Login,
       meta: { title: 'Login - Abuse Moderation' }
+    },
+    {
+      path: '/register',
+      name: 'Registration',
+      component: Registration,
+      meta: { title: 'Register - Abuse Moderation' }
     },
     {
       path: '/feed',
@@ -60,8 +67,8 @@ router.beforeEach((to, from, next) => {
     }
   }
 
-  // If already logged in and trying to access login page
-  if (to.path === '/login' && token && user) {
+  // If already logged in and trying to access login/register page
+  if ((to.path === '/login' || to.path === '/register') && token && user) {
     if (user.role === 'moderator') {
       next('/mod-dashboard')
     } else {

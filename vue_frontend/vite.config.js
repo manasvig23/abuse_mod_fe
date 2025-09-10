@@ -9,10 +9,8 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
-  // Disable dev overlay
   server: {
-    hmr: {
-      overlay: false  // This disables the error overlay
-    }
+    port: 5173,
+    open: true
   }
 })

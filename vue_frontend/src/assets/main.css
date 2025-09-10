@@ -8,18 +8,15 @@
 body {
   font-family: 'Arial', sans-serif;
   background-color: #ffffff;
+  line-height: 1.6;
 }
 
 #app {
   min-height: 100vh;
 }
 
+/* Hide Vite dev overlay */
 #vite-dev-overlay,
-[data-vite-dev-overlay],
-div[style*="position: fixed"][style*="bottom: 0"] {
-  display: none !important;
-}
-
-.vite-dev-overlay {
+[data-vite-dev-overlay] {
   display: none !important;
 }
