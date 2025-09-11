@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE_URL = 'http://localhost:8001'
+const API_BASE_URL = 'http://localhost:8001'  // ✅ Fixed port to 8000
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -79,6 +79,11 @@ export const moderatorAPI = {
     return response.data
   },
 
+  async getUsersDropdown() {
+    const response = await api.get('/api/moderator/users-dropdown')
+    return response.data
+  },
+
   async getAllPosts(userId = null) {
     const params = userId ? { user_id: userId } : {}
     const response = await api.get('/api/moderator/all-posts', { params })
@@ -101,8 +106,8 @@ export const moderatorAPI = {
     return response.data
   },
 
-  async getStatistics(userId = null) {
-    const params = userId ? { user_id: userId } : {}
+  async getStatistics(username = null) {  // ✅ Fixed parameter name
+    const params = username ? { username: username } : {}
     const response = await api.get('/api/moderator/statistics', { params })
     return response.data
   },
