@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE_URL = 'http://localhost:8001'  // ✅ Fixed port to 8000
+const API_BASE_URL = 'http://localhost:8001'
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -44,8 +44,13 @@ export const authAPI = {
   },
 
   async register(userData) {
-    const response = await api.post('/api/register', userData)
-    return response.data
+    try {
+      const response = await api.post('/api/register', userData)
+      return response.data
+    } catch (error) {
+      console.error('Registration API Error:', error.response?.data)
+      throw error
+    }
   }
 }
 
@@ -106,7 +111,7 @@ export const moderatorAPI = {
     return response.data
   },
 
-  async getStatistics(username = null) {  // ✅ Fixed parameter name
+  async getStatistics(username = null) {
     const params = username ? { username: username } : {}
     const response = await api.get('/api/moderator/statistics', { params })
     return response.data

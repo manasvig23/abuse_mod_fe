@@ -88,29 +88,50 @@
 
         <!-- Review Comments Tab -->
         <div v-if="activeTab === 'reviewComments'" class="content-section">
-          <h2>Review Comments</h2>
-          <p class="info-text">Posts with comments requiring manual review</p>
+          <h2>Review Comments - User Details</h2>
+          <p class="info-text">Users with posts containing comments that need human review</p>
 
           <div v-if="loadingReviewPosts" class="loading">Loading posts for review...</div>
 
-          <div class="posts-container">
-            <div v-for="post in reviewPosts" :key="post.id" class="post-item review-item">
-              <div class="post-content">
-                <p>{{ post.content }}</p>
-                <div class="post-meta">
-                  <span>by {{ post.author_username }}</span>
-                  <span>{{ formatDate(post.created_at) }}</span>
-                  <span class="pending-count">{{ post.pending_comments_count }} pending review</span>
-                </div>
-              </div>
-              <div class="post-actions">
-                <button @click="reviewPostComments(post.id)" class="action-btn review-btn">Review</button>
-              </div>
+          <div v-else-if="reviewItems.length > 0" class="review-table">
+            <div class="table-header">
+              <div>User ID</div>
+              <div>Username</div>
+              <div>Status</div>
+              <div>Abuse Rate</div>
+              <div>User Joined</div>
+              <div>Post ID</div>
+              <div>Post Content</div>
+              <div>Pending</div>
+              <div>Actions</div>
             </div>
             
-            <div v-if="reviewPosts.length === 0 && !loadingReviewPosts" class="empty-state">
-              🎉 No comments need review right now!
+            <div v-for="item in reviewItems" :key="`${item.user_id}-${item.post_id}`" class="table-row">
+              <div class="user-id">{{ item.user_id }}</div>
+              <div class="username">{{ item.username }}</div>
+              <div class="status" :class="item.is_active ? 'active' : 'inactive'">
+                {{ item.is_active ? 'Active' : 'Inactive' }}
+              </div>
+              <div class="abuse-rate" :class="getAbuseRateClass(item.abuse_rate_percent)">
+                {{ item.abuse_rate_percent }}%
+              </div>
+              <div class="date">{{ formatDate(item.user_created_at) }}</div>
+              <div class="post-id">{{ item.post_id }}</div>
+              <div class="post-content">{{ item.post_content }}</div>
+              <div class="pending-count">{{ item.pending_comments_count }}</div>
+              <div class="actions">
+                <button @click="viewPostComments(item.post_id)" class="action-btn view-btn">
+                  View Post
+                </button>
+                <button @click="reviewPostComments(item.post_id)" class="action-btn review-btn">
+                  Review
+                </button>
+              </div>
             </div>
+          </div>
+          
+          <div v-else-if="!loadingReviewPosts" class="empty-state">
+            🎉 No comments need review right now!
           </div>
         </div>
 
@@ -361,6 +382,7 @@ export default {
       usersList: [],
       allPosts: [],
       reviewPosts: [],
+      reviewItems: [],
       flaggedPosts: [],
       stats: null,
       reviewPost: {},
@@ -420,12 +442,12 @@ export default {
     },
 
     async loadReviewPosts() {
-      if (this.reviewPosts.length > 0) return // Already loaded
+      if (this.reviewItems.length > 0) return // Already loaded
       
       this.loadingReviewPosts = true
       try {
         const response = await moderatorAPI.getPostsForReview()
-        this.reviewPosts = response.posts || []
+        this.reviewItems = response.review_items || []
       } catch (error) {
         console.error('Error loading review posts:', error)
       } finally {
@@ -505,6 +527,12 @@ export default {
     formatDate(date) {
       if (!date) return 'Unknown'
       return new Date(date).toLocaleDateString()
+    },
+
+    getAbuseRateClass(rate) {
+      if (rate >= 50) return 'high-risk'
+      if (rate >= 20) return 'medium-risk' 
+      return 'low-risk'
     },
 
     // Tab switching with data loading
@@ -632,6 +660,129 @@ export default {
   border-radius: 5px;
   font-size: 14px;
   min-width: 200px;
+}
+
+/* Review Table */
+.review-table {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  overflow-x: auto;
+}
+
+.review-table .table-header {
+  display: grid;
+  grid-template-columns: 80px 120px 80px 100px 120px 80px 2fr 80px 180px;
+  gap: 15px;
+  background-color: #34495e;
+  color: white;
+  padding: 15px 20px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.review-table .table-row {
+  display: grid;
+  grid-template-columns: 80px 120px 80px 100px 120px 80px 2fr 80px 180px;
+  gap: 15px;
+  padding: 15px 20px;
+  border-bottom: 1px solid #e9ecef;
+  align-items: center;
+}
+
+.review-table .table-row:hover {
+  background-color: #f8f9fa;
+}
+
+.user-id, .post-id {
+  font-family: monospace;
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.username {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.status.active {
+  color: #27ae60;
+  font-weight: 500;
+}
+
+.status.inactive {
+  color: #e74c3c;
+  font-weight: 500;
+}
+
+.abuse-rate {
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 12px;
+  text-align: center;
+  font-size: 12px;
+}
+
+.abuse-rate.low-risk {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.abuse-rate.medium-risk {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.abuse-rate.high-risk {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.post-content {
+  font-size: 14px;
+  color: #5a6c7d;
+  line-height: 1.4;
+}
+
+.pending-count {
+  background-color: #f39c12;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.view-btn {
+  background-color: #3498db;
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
+.view-btn:hover {
+  background-color: #2980b9;
+}
+
+.review-btn {
+  background-color: #f39c12;
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
+.review-btn:hover {
+  background-color: #e67e22;
+}
+
+.date {
+  font-size: 12px;
+  color: #7f8c8d;
 }
 
 /* Posts Container */

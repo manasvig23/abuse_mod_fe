@@ -268,9 +268,9 @@ export default {
         if (response.visible_in_feed) {
           alert('Comment posted successfully!')
         } else if (response.auto_processed) {
-          alert('Your comment has been flagged and is hidden from public view.')
+          alert('Comment found abusive, hence hidden from the user.')
         } else {
-          alert('Your comment is pending review by moderators.')
+          alert('Comment posted will be reviewed by the moderators.')
         }
         
         this.newComment = ''
