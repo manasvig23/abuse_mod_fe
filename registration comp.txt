@@ -1,0 +1,391 @@
+<template>
+  <div class="registration-container">
+    <div class="registration-card">
+      <div class="brand-section">
+        <div class="logo">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM8.5 8C9.33 8 10 8.67 10 9.5S9.33 11 8.5 11 7 10.33 7 9.5 7.67 8 8.5 8zm7 0c.83 0 1.5.67 1.5 1.5S16.33 11 15.5 11 14 10.33 14 9.5 14.67 8 15.5 8zM12 17.5c-2.33 0-4.31-1.46-5.11-3.5h10.22c-.8 2.04-2.78 3.5-5.11 3.5z"/>
+          </svg>
+        </div>
+        <h1 class="brand-title">Join SafeSpace</h1>
+        <p class="brand-subtitle">Create your account to get started</p>
+      </div>
+      
+      <form @submit.prevent="handleRegister" class="registration-form">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input
+            v-model="formData.username"
+            type="text"
+            placeholder="Choose a unique username"
+            class="form-input"
+            required
+          />
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input
+            v-model="formData.email"
+            type="email"
+            placeholder="Enter your email"
+            class="form-input"
+            required
+          />
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input
+            v-model="formData.password"
+            type="password"
+            placeholder="Create a secure password"
+            class="form-input"
+            required
+          />
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Account Type</label>
+          <div class="role-selector">
+            <div 
+              class="role-option"
+              :class="{ selected: formData.role === 'user' }"
+              @click="formData.role = 'user'"
+            >
+              <div class="role-icon">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+                </svg>
+              </div>
+              <div class="role-content">
+                <div class="role-title">User</div>
+                <div class="role-description">Create posts and engage with content</div>
+              </div>
+            </div>
+            
+            <div 
+              class="role-option"
+              :class="{ selected: formData.role === 'moderator' }"
+              @click="formData.role = 'moderator'"
+            >
+              <div class="role-icon">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/>
+                </svg>
+              </div>
+              <div class="role-content">
+                <div class="role-title">Moderator</div>
+                <div class="role-description">Review and manage community content</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <button type="submit" class="register-btn" :disabled="loading">
+          <span v-if="loading" class="spinner"></span>
+          {{ loading ? 'Creating Account...' : 'Create Account' }}
+        </button>
+        
+        <div v-if="error" class="error-alert">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+          </svg>
+          {{ error }}
+        </div>
+
+        <div class="auth-footer">
+          <span>Already have an account?</span>
+          <router-link to="/login" class="auth-link">Sign in</router-link>
+        </div>
+      </form>
+    </div>
+  </div>
+</template>
+
+<script>
+import { authAPI } from '@/services/api'
+
+export default {
+  name: 'Registration',
+  data() {
+    return {
+      formData: {
+        username: '',
+        email: '',
+        password: '',
+        role: 'user'
+      },
+      loading: false,
+      error: ''
+    }
+  },
+  methods: {
+    async handleRegister() {
+      this.loading = true
+      this.error = ''
+      
+      try {
+        const response = await authAPI.register(this.formData)
+        
+        const loginResponse = await authAPI.login({
+          username: this.formData.username,
+          password: this.formData.password
+        })
+        
+        localStorage.setItem('token', loginResponse.access_token)
+        localStorage.setItem('user', JSON.stringify(loginResponse.user))
+        
+        if (loginResponse.user.role === 'moderator') {
+          this.$router.push('/mod-dashboard')
+        } else {
+          this.$router.push('/feed')
+        }
+        
+      } catch (error) {
+        this.error = error.response?.data?.detail || 'Registration failed. Please try again.'
+        console.error('Registration error:', error)
+      } finally {
+        this.loading = false
+      }
+    }
+  }
+}
+</script>
+
+<style scoped>
+.registration-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+.registration-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 24px;
+  padding: 3rem 2.5rem;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.brand-section {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.logo {
+  display: inline-flex;
+  padding: 1rem;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border-radius: 16px;
+  margin-bottom: 1rem;
+}
+
+.brand-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.025em;
+}
+
+.brand-subtitle {
+  color: #6b7280;
+  font-size: 0.95rem;
+  margin: 0;
+  font-weight: 500;
+}
+
+.registration-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+  letter-spacing: 0.025em;
+}
+
+.form-input {
+  padding: 0.875rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  background: #fff;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-input::placeholder {
+  color: #9ca3af;
+}
+
+.role-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.role-option {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #fff;
+}
+
+.role-option:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.role-option.selected {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.role-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #f3f4f6;
+  border-radius: 8px;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.role-option.selected .role-icon {
+  background: #667eea;
+  color: white;
+}
+
+.role-content {
+  flex: 1;
+}
+
+.role-title {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.role-description {
+  color: #6b7280;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.register-btn {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  padding: 1rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.register-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+}
+
+.register-btn:active {
+  transform: translateY(0);
+}
+
+.register-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.auth-footer {
+  text-align: center;
+  padding-top: 1rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.auth-link {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 600;
+  margin-left: 0.25rem;
+}
+
+.auth-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .registration-container {
+    padding: 1rem;
+  }
+  
+  .registration-card {
+    padding: 2rem 1.5rem;
+  }
+}
+</style>

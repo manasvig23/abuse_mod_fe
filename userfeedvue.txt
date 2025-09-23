@@ -5,7 +5,7 @@
       <div class="header-content">
         <div class="header-left">
           <div class="logo-section">
-            <div class="logo-icon"></div>
+            <div class="logo-icon">🚀</div>
             <h1 class="welcome-text">
               Welcome back, <span class="username-highlight">{{ user.username }}</span>!
             </h1>
@@ -13,7 +13,7 @@
         </div>
         <div class="header-right">
           <button @click="showLogoutModal = true" class="logout-button">
-            <span class="logout-icon"></span>
+            <span class="logout-icon">🚪</span>
             Logout
           </button>
         </div>
@@ -30,7 +30,7 @@
             :class="{ active: activeTab === 'myProfile' }" 
             @click="switchTab('myProfile')"
           >
-            <div class="nav-icon"></div>
+            <div class="nav-icon">📝</div>
             <span class="nav-text">My Posts</span>
             <div class="nav-indicator"></div>
           </div>
@@ -39,7 +39,7 @@
             :class="{ active: activeTab === 'exploreFeed' }" 
             @click="switchTab('exploreFeed')"
           >
-            <div class="nav-icon"></div>
+            <div class="nav-icon">🌟</div>
             <span class="nav-text">Explore Feed</span>
             <div class="nav-indicator"></div>
           </div>
@@ -56,7 +56,7 @@
               <p class="section-subtitle">Manage and view your content</p>
             </div>
             <button @click="showCreatePostModal = true" class="create-button">
-              <span class="button-icon"></span>
+              <span class="button-icon">✏️</span>
               Create New Post
             </button>
           </div>
@@ -98,7 +98,7 @@
             </div>
             
             <div v-if="myPosts.length === 0" class="empty-state">
-              <div class="empty-icon"></div>
+              <div class="empty-icon">📝</div>
               <h3>No posts yet</h3>
               <p>Share your thoughts with the community</p>
               <button @click="showCreatePostModal = true" class="create-button">
@@ -160,7 +160,7 @@
             </div>
             
             <div v-if="explorePosts.length === 0" class="empty-state">
-              <div class="empty-icon"></div>
+              <div class="empty-icon">🌟</div>
               <h3>No posts to explore</h3>
               <p>Check back later for new content</p>
             </div>
@@ -1333,4 +1333,3 @@ export default {
     justify-content: center;
   }
 }
-</style>

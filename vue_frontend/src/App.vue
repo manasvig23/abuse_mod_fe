@@ -13,5 +13,6 @@ export default {
 <style>
 #app {
   min-height: 100vh;
+  font-family: 'Inter', sans-serif;
 }
 </style>

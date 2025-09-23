@@ -10,9 +10,9 @@
     <div class="registration-card">
       <div class="registration-header">
         <div class="logo-container">
-          <div class="logo-icon"></div>
+          <div class="logo-icon">✨</div>
           <h1 class="registration-title">Join Our Platform</h1>
-          <p class="registration-subtitle">Create your  account</p>
+          <p class="registration-subtitle">Create your abuse moderation account</p>
         </div>
       </div>
       
@@ -27,7 +27,7 @@
               class="form-input"
               required
             />
-            <div class="input-icon"></div>
+            <div class="input-icon">👤</div>
           </div>
         </div>
         
@@ -41,7 +41,7 @@
               class="form-input"
               required
             />
-            <div class="input-icon"></div>
+            <div class="input-icon">📧</div>
           </div>
         </div>
         
@@ -55,7 +55,7 @@
               class="form-input"
               required
             />
-            <div class="input-icon"></div>
+            <div class="input-icon">🔐</div>
           </div>
         </div>
         
@@ -67,7 +67,7 @@
               :class="{ active: formData.role === 'user' }"
               @click="formData.role = 'user'"
             >
-              <div class="role-icon"></div>
+              <div class="role-icon">👥</div>
               <div class="role-info">
                 <h3>Regular User</h3>
                 <p>Create posts and comments</p>
@@ -80,7 +80,7 @@
               :class="{ active: formData.role === 'moderator' }"
               @click="formData.role = 'moderator'"
             >
-              <div class="role-icon"></div>
+              <div class="role-icon">🛡️</div>
               <div class="role-info">
                 <h3>Moderator</h3>
                 <p>Manage content and users</p>
@@ -564,4 +564,3 @@ export default {
     min-height: 52px;
   }
 }
-</style>

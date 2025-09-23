@@ -5,7 +5,7 @@
       <div class="header-content">
         <div class="header-left">
           <div class="logo-section">
-            <div class="logo-icon"></div>
+            <div class="logo-icon">🛡️</div>
             <div class="header-info">
               <h1 class="welcome-text">Moderator Dashboard</h1>
               <p class="welcome-subtitle">Welcome back, <span class="username-highlight">{{ user.username }}</span></p>
@@ -21,7 +21,7 @@
             </div>
           </div>
           <button @click="showLogoutModal = true" class="logout-button">
-            <span class="logout-icon"></span>
+            <span class="logout-icon">🚪</span>
             Logout
           </button>
         </div>
@@ -38,7 +38,7 @@
             :class="{ active: activeTab === 'allPosts' }" 
             @click="switchTab('allPosts')"
           >
-            <div class="nav-icon"></div>
+            <div class="nav-icon">📋</div>
             <div class="nav-content">
               <span class="nav-text">All Posts</span>
               <span class="nav-description">View user posts</span>
@@ -51,7 +51,7 @@
             :class="{ active: activeTab === 'reviewComments' }" 
             @click="switchTab('reviewComments')"
           >
-            <div class="nav-icon"></div>
+            <div class="nav-icon">👁️</div>
             <div class="nav-content">
               <span class="nav-text">Review Comments</span>
               <span class="nav-description">Comments needing review</span>
@@ -65,7 +65,7 @@
             :class="{ active: activeTab === 'flaggedComments' }" 
             @click="switchTab('flaggedComments')"
           >
-            <div class="nav-icon"></div>
+            <div class="nav-icon">🚩</div>
             <div class="nav-content">
               <span class="nav-text">Flagged Comments</span>
               <span class="nav-description">Hidden content</span>
@@ -78,7 +78,7 @@
             :class="{ active: activeTab === 'statistics' }" 
             @click="switchTab('statistics')"
           >
-            <div class="nav-icon"></div>
+            <div class="nav-icon">📊</div>
             <div class="nav-content">
               <span class="nav-text">Statistics</span>
               <span class="nav-description">System analytics</span>
@@ -91,7 +91,7 @@
             :class="{ active: activeTab === 'userList' }" 
             @click="switchTab('userList')"
           >
-            <div class="nav-icon"></div>
+            <div class="nav-icon">👥</div>
             <div class="nav-content">
               <span class="nav-text">User Management</span>
               <span class="nav-description">Manage users</span>
@@ -171,7 +171,7 @@
                     class="action-button primary"
                     v-if="post.has_comments_to_view"
                   >
-                    <span class="button-icon"></span>
+                    <span class="button-icon">👁️</span>
                     View Comments
                   </button>
                 </div>
@@ -179,7 +179,7 @@
             </div>
             
             <div v-if="allPosts.length === 0" class="empty-state">
-              <div class="empty-icon"></div>
+              <div class="empty-icon">📝</div>
               <h3>No posts found</h3>
               <p>{{ selectedUserId ? 'This user has not created any posts yet.' : 'No posts available in the system.' }}</p>
             </div>
@@ -246,11 +246,11 @@
               
               <div class="review-actions">
                 <button @click="viewPostComments(item.post_id)" class="action-button secondary">
-                  <span class="button-icon"></span>
+                  <span class="button-icon">👁️</span>
                   View Post
                 </button>
                 <button @click="reviewPostComments(item.post_id)" class="action-button primary">
-                  <span class="button-icon"></span>
+                  <span class="button-icon">⚖️</span>
                   Review Comments
                 </button>
               </div>
@@ -258,7 +258,7 @@
           </div>
           
           <div v-else-if="!loadingReviewPosts" class="empty-state success">
-            <div class="empty-icon"></div>
+            <div class="empty-icon">🎉</div>
             <h3>All caught up!</h3>
             <p>No comments need review right now. Great job keeping the community clean!</p>
           </div>
@@ -300,7 +300,7 @@
                   </div>
                 </div>
                 <div class="flagged-badge">
-                  <span class="flag-icon"></span>
+                  <span class="flag-icon">🚩</span>
                   <span>{{ post.flagged_count }} flagged</span>
                 </div>
               </div>
@@ -337,7 +337,7 @@
             </div>
 
             <div v-if="flaggedPosts.length === 0" class="empty-state">
-              <div class="empty-icon"></div>
+              <div class="empty-icon">✨</div>
               <h3>No flagged content</h3>
               <p>No flagged comments found for the selected criteria.</p>
             </div>
@@ -373,7 +373,7 @@
           <div v-if="stats && stats.type === 'overall_stats'" class="stats-dashboard">
             <div class="stats-grid">
               <div class="stat-card primary">
-                <div class="stat-icon"></div>
+                <div class="stat-icon">👥</div>
                 <div class="stat-content">
                   <h3 class="stat-number">{{ stats.stats.total_users }}</h3>
                   <p class="stat-label">Total Users</p>
@@ -381,7 +381,7 @@
               </div>
               
               <div class="stat-card secondary">
-                <div class="stat-icon"></div>
+                <div class="stat-icon">📝</div>
                 <div class="stat-content">
                   <h3 class="stat-number">{{ stats.stats.total_posts }}</h3>
                   <p class="stat-label">Total Posts</p>
@@ -397,7 +397,7 @@
               </div>
               
               <div class="stat-card success">
-                <div class="stat-icon"></div>
+                <div class="stat-icon">✅</div>
                 <div class="stat-content">
                   <h3 class="stat-number">{{ stats.stats.clean_comments }}</h3>
                   <p class="stat-label">Clean Comments</p>
@@ -405,7 +405,7 @@
               </div>
               
               <div class="stat-card warning">
-                <div class="stat-icon"></div>
+                <div class="stat-icon">🚩</div>
                 <div class="stat-content">
                   <h3 class="stat-number">{{ stats.stats.flagged_comments }}</h3>
                   <p class="stat-label">Flagged Comments</p>
@@ -413,7 +413,7 @@
               </div>
               
               <div class="stat-card danger">
-                <div class="stat-icon"></div>
+                <div class="stat-icon">⏳</div>
                 <div class="stat-content">
                   <h3 class="stat-number">{{ stats.stats.needs_review }}</h3>
                   <p class="stat-label">Needs Review</p>
@@ -462,7 +462,7 @@
             
             <div class="user-stats-grid">
               <div class="stat-card">
-                <div class="stat-icon"></div>
+                <div class="stat-icon">📝</div>
                 <div class="stat-content">
                   <h3 class="stat-number">{{ stats.stats.total_posts }}</h3>
                   <p class="stat-label">Posts Created</p>
@@ -494,7 +494,7 @@
               </div>
               
               <div class="stat-card warning">
-                <div class="stat-icon"></div>
+                <div class="stat-icon">⏳</div>
                 <div class="stat-content">
                   <h3 class="stat-number">{{ stats.stats.pending_comments }}</h3>
                   <p class="stat-label">Pending Review</p>
@@ -553,7 +553,7 @@
               <div class="user-card-stats">
                 <div class="stat-row">
                   <div class="stat-item">
-                    <span class="stat-icon"></span>
+                    <span class="stat-icon">📝</span>
                     <div class="stat-details">
                       <span class="stat-number">{{ user.total_posts }}</span>
                       <span class="stat-label">Posts</span>

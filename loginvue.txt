@@ -9,9 +9,9 @@
     <div class="login-card">
       <div class="login-header">
         <div class="logo-container">
-          <div class="logo-icon"></div>
+          <div class="logo-icon">🛡️</div>
           <h1 class="login-title">Welcome Back</h1>
-          <p class="login-subtitle">Sign in </p>
+          <p class="login-subtitle">Sign in to your abuse moderation dashboard</p>
         </div>
       </div>
       
@@ -25,7 +25,7 @@
               class="form-input"
               required
             />
-            <div class="input-icon"></div>
+            <div class="input-icon">👤</div>
           </div>
         </div>
         
@@ -38,7 +38,7 @@
               class="form-input"
               required
             />
-            <div class="input-icon"></div>
+            <div class="input-icon">🔒</div>
           </div>
         </div>
         
@@ -48,7 +48,7 @@
         </button>
         
         <div v-if="error" class="error-message">
-          <div class="error-icon"></div>
+          <div class="error-icon">⚠️</div>
           {{ error }}
         </div>
 
