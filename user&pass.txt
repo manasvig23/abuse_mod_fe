@@ -1,0 +1,18 @@
+docker-compose up -d --build
+
+user details:
+1. testuser1
+user1@gmail.com
+password123
+
+2.testuser2
+user2@gmail.com
+password456
+
+3.moderator1
+mod1@gmail.com
+mod123
+
+4.moderator2
+mod2@gmail.com
+mod456

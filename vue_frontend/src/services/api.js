@@ -27,9 +27,8 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid
       localStorage.removeItem('token')
-      localStorage.removeItem('user')
+      localStorage.removeItem('user') // Fixed typo here
       window.location.href = '/login'
     }
     return Promise.reject(error)
@@ -102,6 +101,11 @@ export const moderatorAPI = {
 
   async getPostForReview(postId) {
     const response = await api.get(`/api/moderator/posts/${postId}/review`)
+    return response.data
+  },
+
+  async getPostComments(postId) {
+    const response = await api.get(`/api/moderator/posts/${postId}/view-comments`)
     return response.data
   },
 

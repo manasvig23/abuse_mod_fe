@@ -1,11 +1,11 @@
 <template>
-  <div class="dashboard-container">
+  <div class="dashboard-container" :class="{ loaded: isLoaded }">
     <!-- Modern Header -->
     <header class="dashboard-header">
       <div class="header-content">
         <div class="header-left">
           <div class="logo-section">
-            <div class="logo-icon"></div>
+            <div class="logo-icon">🛡️</div>
             <div class="header-info">
               <h1 class="welcome-text">Moderator Dashboard</h1>
               <p class="welcome-subtitle">Welcome back, <span class="username-highlight">{{ user.username }}</span></p>
@@ -14,14 +14,13 @@
         </div>
         <div class="header-right">
           <div class="user-profile">
-            <div class="user-avatar">{{ user.username.charAt(0).toUpperCase() }}</div>
+            <div class="user-avatar">{{ user.username ? user.username.charAt(0).toUpperCase() : 'M' }}</div>
             <div class="user-info">
               <span class="user-name">{{ user.username }}</span>
               <span class="user-role">{{ user.role }}</span>
             </div>
           </div>
           <button @click="showLogoutModal = true" class="logout-button">
-            <span class="logout-icon"></span>
             Logout
           </button>
         </div>
@@ -38,7 +37,7 @@
             :class="{ active: activeTab === 'allPosts' }" 
             @click="switchTab('allPosts')"
           >
-            <div class="nav-icon"></div>
+            <div class="nav-icon">📋</div>
             <div class="nav-content">
               <span class="nav-text">All Posts</span>
               <span class="nav-description">View user posts</span>
@@ -51,7 +50,7 @@
             :class="{ active: activeTab === 'reviewComments' }" 
             @click="switchTab('reviewComments')"
           >
-            <div class="nav-icon"></div>
+            <div class="nav-icon">⚖️</div>
             <div class="nav-content">
               <span class="nav-text">Review Comments</span>
               <span class="nav-description">Comments needing review</span>
@@ -65,7 +64,7 @@
             :class="{ active: activeTab === 'flaggedComments' }" 
             @click="switchTab('flaggedComments')"
           >
-            <div class="nav-icon"></div>
+            <div class="nav-icon">🚩</div>
             <div class="nav-content">
               <span class="nav-text">Flagged Comments</span>
               <span class="nav-description">Hidden content</span>
@@ -78,7 +77,7 @@
             :class="{ active: activeTab === 'statistics' }" 
             @click="switchTab('statistics')"
           >
-            <div class="nav-icon"></div>
+            <div class="nav-icon">📊</div>
             <div class="nav-content">
               <span class="nav-text">Statistics</span>
               <span class="nav-description">System analytics</span>
@@ -91,7 +90,7 @@
             :class="{ active: activeTab === 'userList' }" 
             @click="switchTab('userList')"
           >
-            <div class="nav-icon"></div>
+            <div class="nav-icon">👥</div>
             <div class="nav-content">
               <span class="nav-text">User Management</span>
               <span class="nav-description">Manage users</span>
@@ -103,668 +102,127 @@
 
       <!-- Main Content Area -->
       <main class="main-content">
-        <!-- All Posts Tab -->
-        <div v-if="activeTab === 'allPosts'" class="content-section fade-in">
-          <div class="section-header">
-            <div class="section-title">
-              <h2>All Posts Management</h2>
-              <p class="section-subtitle">Monitor and review user-generated content</p>
-            </div>
-            <div class="section-controls">
-              <div class="filter-controls">
-                <label class="filter-label">Filter by User:</label>
-                <select v-model="selectedUserId" @change="loadAllPosts" class="modern-select">
-                  <option value="">All Users</option>
-                  <option v-for="user in users" :key="user.id" :value="user.id">
-                    {{ user.username }} ({{ user.role }})
-                  </option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div v-if="loadingAllPosts" class="loading-state">
-            <div class="loading-spinner"></div>
-            <p>Loading posts...</p>
-          </div>
-
-          <div class="posts-grid" v-else>
-            <div v-for="post in allPosts" :key="post.id" class="post-card modern-card">
-              <div class="post-header">
-                <div class="post-author">
-                  <div class="author-avatar">{{ post.author_username.charAt(0).toUpperCase() }}</div>
-                  <div class="author-info">
-                    <h4 class="author-name">{{ post.author_username }}</h4>
-                    <p class="post-date">{{ formatDate(post.created_at) }}</p>
-                  </div>
-                </div>
-                <div class="post-stats">
-                  <div class="stat-chip">
-                    <span class="stat-icon">💬</span>
-                    <span class="stat-value">{{ post.total_comments }}</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="post-content">
-                <p>{{ post.content }}</p>
-              </div>
-              
-              <div class="post-footer">
-                <div class="comment-breakdown">
-                  <div class="comment-stat approved" v-if="post.approved_comments > 0">
-                    <span class="dot"></span>
-                    <span>{{ post.approved_comments }} Approved</span>
-                  </div>
-                  <div class="comment-stat pending" v-if="post.pending_comments > 0">
-                    <span class="dot"></span>
-                    <span>{{ post.pending_comments }} Pending</span>
-                  </div>
-                  <div class="comment-stat hidden" v-if="post.hidden_comments > 0">
-                    <span class="dot"></span>
-                    <span>{{ post.hidden_comments }} Hidden</span>
-                  </div>
-                </div>
-                <div class="post-actions">
-                  <button 
-                    @click="viewPostComments(post.id)" 
-                    class="action-button primary"
-                    v-if="post.has_comments_to_view"
-                  >
-                    <span class="button-icon"></span>
-                    View Comments
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            <div v-if="allPosts.length === 0" class="empty-state">
-              <div class="empty-icon"></div>
-              <h3>No posts found</h3>
-              <p>{{ selectedUserId ? 'This user has not created any posts yet.' : 'No posts available in the system.' }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Review Comments Tab -->
-        <div v-if="activeTab === 'reviewComments'" class="content-section fade-in">
-          <div class="section-header">
-            <div class="section-title">
-              <h2>Comment Review Queue</h2>
-              <p class="section-subtitle">Comments flagged for human review</p>
-            </div>
-            <div class="queue-stats">
-              <div class="stat-card mini">
-                <span class="stat-number">{{ reviewItems.length }}</span>
-                <span class="stat-label">Posts with pending reviews</span>
-              </div>
-            </div>
-          </div>
-
-          <div v-if="loadingReviewPosts" class="loading-state">
-            <div class="loading-spinner"></div>
-            <p>Loading review queue...</p>
-          </div>
-
-          <div v-else-if="reviewItems.length > 0" class="review-queue">
-            <div v-for="item in reviewItems" :key="`${item.user_id}-${item.post_id}`" class="review-item">
-              <div class="review-header">
-                <div class="user-profile-card">
-                  <div class="user-avatar-large">{{ item.username.charAt(0).toUpperCase() }}</div>
-                  <div class="user-details">
-                    <h4 class="user-name">{{ item.username }}</h4>
-                    <div class="user-metadata">
-                      <span class="user-id">ID: {{ item.user_id }}</span>
-                      <span class="user-status" :class="item.is_active ? 'active' : 'inactive'">
-                        {{ item.is_active ? 'Active' : 'Inactive' }}
-                      </span>
-                      <span class="join-date">Joined {{ formatDate(item.user_created_at) }}</span>
-                    </div>
-                    <div class="abuse-rate-indicator">
-                      <span class="rate-label">Abuse Rate:</span>
-                      <div class="rate-bar">
-                        <div class="rate-fill" :class="getAbuseRateClass(item.abuse_rate_percent)" 
-                             :style="{ width: item.abuse_rate_percent + '%' }"></div>
-                      </div>
-                      <span class="rate-value" :class="getAbuseRateClass(item.abuse_rate_percent)">
-                        {{ item.abuse_rate_percent }}%
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="post-preview">
-                <div class="post-meta">
-                  <span class="post-id">Post #{{ item.post_id }}</span>
-                  <span class="pending-count">{{ item.pending_comments_count }} comments pending</span>
-                </div>
-                <div class="post-content-preview">
-                  <p>{{ item.post_content }}</p>
-                </div>
-              </div>
-              
-              <div class="review-actions">
-                <button @click="viewPostComments(item.post_id)" class="action-button secondary">
-                  <span class="button-icon"></span>
-                  View Post
-                </button>
-                <button @click="reviewPostComments(item.post_id)" class="action-button primary">
-                  <span class="button-icon"></span>
-                  Review Comments
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          <div v-else-if="!loadingReviewPosts" class="empty-state success">
-            <div class="empty-icon"></div>
-            <h3>All caught up!</h3>
-            <p>No comments need review right now. Great job keeping the community clean!</p>
-          </div>
-        </div>
-
-        <!-- Flagged Comments Tab -->
-        <div v-if="activeTab === 'flaggedComments'" class="content-section fade-in">
-          <div class="section-header">
-            <div class="section-title">
-              <h2>Flagged Content</h2>
-              <p class="section-subtitle">Hidden comments and abusive content</p>
-            </div>
-            <div class="section-controls">
-              <div class="filter-controls">
-                <label class="filter-label">Filter by User:</label>
-                <select v-model="selectedFlaggedUserId" @change="loadFlaggedComments" class="modern-select">
-                  <option value="">All Users</option>
-                  <option v-for="user in users" :key="user.id" :value="user.id">
-                    {{ user.username }}
-                  </option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div v-if="loadingFlaggedComments" class="loading-state">
-            <div class="loading-spinner"></div>
-            <p>Loading flagged content...</p>
-          </div>
-
-          <div class="flagged-content-grid" v-else>
-            <div v-for="post in flaggedPosts" :key="post.id" class="flagged-post-card">
-              <div class="post-header">
-                <div class="post-author">
-                  <div class="author-avatar">{{ post.author_username.charAt(0).toUpperCase() }}</div>
-                  <div class="author-info">
-                    <h4 class="author-name">{{ post.author_username }}</h4>
-                    <p class="post-date">{{ formatDate(post.created_at) }}</p>
-                  </div>
-                </div>
-                <div class="flagged-badge">
-                  <span class="flag-icon"></span>
-                  <span>{{ post.flagged_count }} flagged</span>
-                </div>
-              </div>
-              
-              <div class="post-content">
-                <p>{{ post.content }}</p>
-              </div>
-              
-              <div class="flagged-comments-section">
-                <h5 class="comments-title">Flagged Comments:</h5>
-                <div class="flagged-comments-list">
-                  <div v-for="comment in post.flagged_comments" :key="comment.id" class="flagged-comment">
-                    <div class="comment-header">
-                      <div class="comment-author">
-                        <div class="comment-avatar">{{ comment.author_username.charAt(0).toUpperCase() }}</div>
-                        <strong class="comment-author-name">{{ comment.author_username }}</strong>
-                      </div>
-                      <div class="comment-status-badge" :class="comment.status">
-                        {{ comment.label }}
-                      </div>
-                    </div>
-                    <div class="comment-content">
-                      <p>{{ comment.text }}</p>
-                    </div>
-                    <div class="comment-details" v-if="comment.flagged_words">
-                      <span class="flagged-words">
-                        <span class="detail-label">Flagged:</span>
-                        {{ comment.flagged_words }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div v-if="flaggedPosts.length === 0" class="empty-state">
-              <div class="empty-icon"></div>
-              <h3>No flagged content</h3>
-              <p>No flagged comments found for the selected criteria.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Statistics Tab -->
-        <div v-if="activeTab === 'statistics'" class="content-section fade-in">
-          <div class="section-header">
-            <div class="section-title">
-              <h2>Analytics & Statistics</h2>
-              <p class="section-subtitle">System performance and user metrics</p>
-            </div>
-            <div class="section-controls">
-              <div class="filter-controls">
-                <label class="filter-label">User Statistics:</label>
-                <select v-model="selectedStatsUsername" @change="loadStatistics" class="modern-select">
-                  <option value="">System Overview</option>
-                  <option v-for="user in users" :key="user.id" :value="user.username">
-                    {{ user.username }}
-                  </option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div v-if="loadingStatistics" class="loading-state">
-            <div class="loading-spinner"></div>
-            <p>Loading analytics...</p>
-          </div>
-
-          <!-- System Statistics -->
-          <div v-if="stats && stats.type === 'overall_stats'" class="stats-dashboard">
-            <div class="stats-grid">
-              <div class="stat-card primary">
-                <div class="stat-icon"></div>
-                <div class="stat-content">
-                  <h3 class="stat-number">{{ stats.stats.total_users }}</h3>
-                  <p class="stat-label">Total Users</p>
-                </div>
-              </div>
-              
-              <div class="stat-card secondary">
-                <div class="stat-icon"></div>
-                <div class="stat-content">
-                  <h3 class="stat-number">{{ stats.stats.total_posts }}</h3>
-                  <p class="stat-label">Total Posts</p>
-                </div>
-              </div>
-              
-              <div class="stat-card info">
-                <div class="stat-icon">💬</div>
-                <div class="stat-content">
-                  <h3 class="stat-number">{{ stats.stats.total_comments }}</h3>
-                  <p class="stat-label">Total Comments</p>
-                </div>
-              </div>
-              
-              <div class="stat-card success">
-                <div class="stat-icon"></div>
-                <div class="stat-content">
-                  <h3 class="stat-number">{{ stats.stats.clean_comments }}</h3>
-                  <p class="stat-label">Clean Comments</p>
-                </div>
-              </div>
-              
-              <div class="stat-card warning">
-                <div class="stat-icon"></div>
-                <div class="stat-content">
-                  <h3 class="stat-number">{{ stats.stats.flagged_comments }}</h3>
-                  <p class="stat-label">Flagged Comments</p>
-                </div>
-              </div>
-              
-              <div class="stat-card danger">
-                <div class="stat-icon"></div>
-                <div class="stat-content">
-                  <h3 class="stat-number">{{ stats.stats.needs_review }}</h3>
-                  <p class="stat-label">Needs Review</p>
-                </div>
-              </div>
-            </div>
-            
-            <div class="performance-metrics">
-              <div class="metric-card highlight">
-                <div class="metric-header">
-                  <h4>AI Efficiency</h4>
-                  <span class="metric-percentage">{{ stats.stats.ai_efficiency_percent }}%</span>
-                </div>
-                <div class="metric-bar">
-                  <div class="metric-fill" :style="{ width: stats.stats.ai_efficiency_percent + '%' }"></div>
-                </div>
-                <p class="metric-description">Percentage of comments processed automatically</p>
-              </div>
-              
-              <div class="metric-card highlight">
-                <div class="metric-header">
-                  <h4>Abuse Detection Rate</h4>
-                  <span class="metric-percentage">{{ stats.stats.abuse_detection_rate }}%</span>
-                </div>
-                <div class="metric-bar">
-                  <div class="metric-fill danger" :style="{ width: stats.stats.abuse_detection_rate + '%' }"></div>
-                </div>
-                <p class="metric-description">Percentage of abusive content detected</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- User-specific Statistics -->
-          <div v-else-if="stats && stats.type === 'user_stats'" class="user-stats-dashboard">
-            <div class="user-stats-header">
-              <div class="user-avatar-large">{{ stats.user.username.charAt(0).toUpperCase() }}</div>
-              <div class="user-info">
-                <h3>{{ stats.user.username }}</h3>
-                <div class="user-details">
-                  <span class="user-role">{{ stats.user.role }}</span>
-                  <span class="join-date">Joined {{ stats.user.join_date }}</span>
-                  <span class="user-email">{{ stats.user.email }}</span>
-                </div>
-              </div>
-            </div>
-            
-            <div class="user-stats-grid">
-              <div class="stat-card">
-                <div class="stat-icon"></div>
-                <div class="stat-content">
-                  <h3 class="stat-number">{{ stats.stats.total_posts }}</h3>
-                  <p class="stat-label">Posts Created</p>
-                </div>
-              </div>
-              
-              <div class="stat-card">
-                <div class="stat-icon">💬</div>
-                <div class="stat-content">
-                  <h3 class="stat-number">{{ stats.stats.total_comments }}</h3>
-                  <p class="stat-label">Total Comments</p>
-                </div>
-              </div>
-              
-              <div class="stat-card success">
-                <div class="stat-icon">✅</div>
-                <div class="stat-content">
-                  <h3 class="stat-number">{{ stats.stats.approved_comments }}</h3>
-                  <p class="stat-label">Approved</p>
-                </div>
-              </div>
-              
-              <div class="stat-card danger">
-                <div class="stat-icon">❌</div>
-                <div class="stat-content">
-                  <h3 class="stat-number">{{ stats.stats.hidden_comments }}</h3>
-                  <p class="stat-label">Hidden</p>
-                </div>
-              </div>
-              
-              <div class="stat-card warning">
-                <div class="stat-icon"></div>
-                <div class="stat-content">
-                  <h3 class="stat-number">{{ stats.stats.pending_comments }}</h3>
-                  <p class="stat-label">Pending Review</p>
-                </div>
-              </div>
-            </div>
-            
-            <div class="abuse-rate-card">
-              <h4>User Abuse Rate</h4>
-              <div class="abuse-rate-display">
-                <div class="rate-circle" :class="getAbuseRateClass(stats.stats.abuse_rate_percent)">
-                  <span class="rate-number">{{ stats.stats.abuse_rate_percent }}%</span>
-                </div>
-                <p class="rate-description">
-                  {{ getAbuseRateDescription(stats.stats.abuse_rate_percent) }}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- User List Tab -->
-        <div v-if="activeTab === 'userList'" class="content-section fade-in">
-          <div class="section-header">
-            <div class="section-title">
-              <h2>User Management</h2>
-              <p class="section-subtitle">Monitor and manage platform users</p>
-            </div>
-            <div class="user-stats">
-              <div class="stat-chip">
-                <span class="stat-label">Total Users:</span>
-                <span class="stat-value">{{ usersList.length }}</span>
-              </div>
-            </div>
-          </div>
-
-          <div v-if="loadingUsers" class="loading-state">
-            <div class="loading-spinner"></div>
-            <p>Loading users...</p>
-          </div>
-
-          <div class="users-grid" v-else>
-            <div v-for="user in usersList" :key="user.id" class="user-card">
-              <div class="user-card-header">
-                <div class="user-avatar-large">{{ user.username.charAt(0).toUpperCase() }}</div>
-                <div class="user-basic-info">
-                  <h4 class="user-name">{{ user.username }}</h4>
-                  <div class="user-role-badge" :class="user.role">{{ user.role }}</div>
-                </div>
-                <div class="user-status-indicator" :class="user.status.toLowerCase()">
-                  <span class="status-dot"></span>
-                  {{ user.status }}
-                </div>
-              </div>
-              
-              <div class="user-card-stats">
-                <div class="stat-row">
-                  <div class="stat-item">
-                    <span class="stat-icon"></span>
-                    <div class="stat-details">
-                      <span class="stat-number">{{ user.total_posts }}</span>
-                      <span class="stat-label">Posts</span>
-                    </div>
-                  </div>
-                  
-                  <div class="stat-item">
-                    <span class="stat-icon">💬</span>
-                    <div class="stat-details">
-                      <span class="stat-number">{{ user.total_comments }}</span>
-                      <span class="stat-label">Comments</span>
-                    </div>
-                  </div>
-                  
-                  <div class="stat-item warning" v-if="user.flagged_comments > 0">
-                    <span class="stat-icon">🚩</span>
-                    <div class="stat-details">
-                      <span class="stat-number">{{ user.flagged_comments }}</span>
-                      <span class="stat-label">Flagged</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="user-card-footer">
-                <div class="join-info">
-                  <span class="join-label">Joined:</span>
-                  <span class="join-date">{{ user.join_date }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <!-- Dynamic Component Loading -->
+        <AllPosts 
+          v-if="activeTab === 'allPosts'" 
+          :users="users" 
+          @view-comments="handleViewComments"
+        />
+        
+        <ReviewComments 
+          v-if="activeTab === 'reviewComments'" 
+          @view-comments="handleViewComments"
+          @review-comments="handleReviewComments"
+        />
+        
+        <FlaggedComments 
+          v-if="activeTab === 'flaggedComments'" 
+          :users="users"
+          @view-flagged-comments="handleViewFlaggedComments"
+        />
+        
+        <Statistics 
+          v-if="activeTab === 'statistics'" 
+          :users="users"
+        />
+        
+        <UserManagement 
+          v-if="activeTab === 'userList'" 
+        />
       </main>
     </div>
 
-    <!-- Enhanced Modals -->
     <!-- Review Modal -->
-    <div v-if="showReviewModal" class="modal-overlay" @click="closeReviewModal">
-      <div class="modal large-modal modern-modal" @click.stop>
-        <div class="modal-header">
-          <div class="modal-title">
-            <h3>Review Comments</h3>
-            <p class="modal-subtitle">Post by {{ reviewPost.author_username }}</p>
-          </div>
-          <button @click="closeReviewModal" class="modal-close">✕</button>
-        </div>
-
-        <div class="modal-body">
-          <div class="post-context">
-            <div class="post-content-display">
-              <h4>Original Post:</h4>
-              <p>{{ reviewPost.content }}</p>
-            </div>
-          </div>
-
-          <div class="comments-review-section">
-            <h4>Comments for Review ({{ reviewComments.length }})</h4>
-            <div class="comments-review-list">
-              <div v-for="comment in reviewComments" :key="comment.id" class="comment-review-card">
-                <div class="comment-review-header">
-                  <div class="comment-author-info">
-                    <div class="comment-avatar">{{ comment.author_username.charAt(0).toUpperCase() }}</div>
-                    <div class="comment-meta">
-                      <strong class="comment-author">{{ comment.author_username }}</strong>
-                      <span class="comment-date">{{ formatDate(comment.created_at) }}</span>
-                    </div>
-                  </div>
-                  <div class="comment-flags">
-                    <div class="status-badge pending">{{ comment.status }}</div>
-                  </div>
-                </div>
-                
-                <div class="comment-content">
-                  <p>{{ comment.text }}</p>
-                </div>
-                
-                <div class="comment-analysis" v-if="comment.flagged_words || comment.confidence_score">
-                  <div class="analysis-item" v-if="comment.flagged_words">
-                    <span class="analysis-label">Flagged Words:</span>
-                    <span class="flagged-words-list">{{ comment.flagged_words }}</span>
-                  </div>
-                  <div class="analysis-item" v-if="comment.confidence_score">
-                    <span class="analysis-label">Confidence:</span>
-                    <span class="confidence-score">{{ comment.confidence_score }}%</span>
-                  </div>
-                </div>
-                
-                <div class="comment-review-actions">
-                  <button 
-                    @click="reviewComment(comment.id, 'approve')" 
-                    class="review-action-btn approve"
-                    :disabled="comment.status === 'approved'"
-                  >
-                    <span class="btn-icon">✅</span>
-                    Approve
-                  </button>
-                  <button 
-                    @click="reviewComment(comment.id, 'hide')" 
-                    class="review-action-btn hide"
-                    :disabled="comment.status === 'hidden'"
-                  >
-                    <span class="btn-icon">🚫</span>
-                    Hide
-                  </button>
-                  <button 
-                    @click="reviewComment(comment.id, 'delete')" 
-                    class="review-action-btn delete"
-                  >
-                    <span class="btn-icon">🗑️</span>
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="modal-footer">
-          <button @click="closeReviewModal" class="modal-button secondary">Close</button>
-        </div>
-      </div>
-    </div>
+    <ReviewModal
+      v-if="showReviewModal"
+      :post="selectedPost"
+      :comments="reviewComments"
+      :modal-title="modalTitle"
+      :section-title="sectionTitle"
+      :show-actions="showReviewActions"
+      @close="closeReviewModal"
+      @review-comment="handleReviewComment"
+    />
 
     <!-- Logout Modal -->
-    <div v-if="showLogoutModal" class="modal-overlay" @click="showLogoutModal = false">
-      <div class="modal modern-modal" @click.stop>
-        <div class="modal-header">
-          <div class="modal-title">
-            <h3>Confirm Logout</h3>
-          </div>
-        </div>
-        <div class="modal-body">
-          <p>Are you sure you want to logout from your moderator account?</p>
-        </div>
-        <div class="modal-footer">
-          <button @click="showLogoutModal = false" class="modal-button secondary">Cancel</button>
-          <button @click="confirmLogout" class="modal-button danger">Logout</button>
-        </div>
-      </div>
-    </div>
+    <Modal
+      v-if="showLogoutModal"
+      title="Confirm Logout"
+      size="small"
+      type="modern"
+      :show-footer="false"
+      @close="showLogoutModal = false"
+    >
+      <p>Are you sure you want to logout from your moderator account?</p>
+      
+      <template #footer>
+        <button @click="showLogoutModal = false" class="modal-button secondary">Cancel</button>
+        <button @click="confirmLogout" class="modal-button danger">Logout</button>
+      </template>
+    </Modal>
   </div>
 </template>
 
 <script>
 import { moderatorAPI } from '@/services/api'
+import AllPosts from '@/components/moderator/AllPosts.vue'
+import ReviewComments from '@/components/moderator/ReviewComments.vue'
+import FlaggedComments from '@/components/moderator/FlaggedComments.vue'
+import Statistics from '@/components/moderator/Statistics.vue'
+import UserManagement from '@/components/moderator/UserManagement.vue'
+import ReviewModal from '@/components/moderator/ReviewModal.vue'
+import Modal from '@/components/common/Modal.vue'
 
 export default {
   name: 'ModeratorDashboard',
+  components: {
+    AllPosts,
+    ReviewComments,
+    FlaggedComments,
+    Statistics,
+    UserManagement,
+    ReviewModal,
+    Modal
+  },
   data() {
     return {
       user: JSON.parse(localStorage.getItem('user') || '{}'),
-      activeTab: 'reviewComments',
+      activeTab: 'allPosts',
+      isLoaded: false,
       
-      // Data arrays
-      allPosts: [],
-      reviewItems: [],
-      flaggedPosts: [],
-      usersList: [],
-      stats: null,
-      reviewComments: [],
-      reviewPost: {},
-      
-      // Loading states
-      loadingAllPosts: false,
-      loadingReviewPosts: false,
-      loadingFlaggedComments: false,
-      loadingStatistics: false,
-      loadingUsers: false,
-      
-      // Filters
-      selectedUserId: '',
-      selectedFlaggedUserId: '',
-      selectedStatsUsername: '',
-      
-      // Modals
+      // Modal states
       showReviewModal: false,
       showLogoutModal: false,
       
-      // Users list
-      users: []
-    }
-  },
-  
-  computed: {
-    pendingReviewCount() {
-      return this.reviewItems.reduce((total, item) => total + item.pending_comments_count, 0)
+      // Review modal data
+      selectedPost: {},
+      reviewComments: [],
+      modalTitle: 'Review Comments',
+      sectionTitle: 'Comments for Review',
+      showReviewActions: true,
+      
+      // Users list for dropdowns
+      users: [],
+      
+      // Computed values
+      pendingReviewCount: 0
     }
   },
   
   async mounted() {
     await this.loadInitialData()
-    this.switchTab('reviewComments')
     
     // Add entrance animation
     setTimeout(() => {
-      document.querySelector('.dashboard-container').classList.add('loaded')
+      this.isLoaded = true
     }, 100)
   },
   
   methods: {
     async loadInitialData() {
       try {
-        const [usersResponse, statsResponse] = await Promise.all([
-          moderatorAPI.getUsers(),
-          moderatorAPI.getStatistics()
-        ])
-        
-        this.users = usersResponse.users || []
-        this.usersList = usersResponse.users || []
-        this.stats = statsResponse
+        const response = await moderatorAPI.getUsersDropdown()
+        this.users = response.users || []
       } catch (error) {
         console.error('Error loading initial data:', error)
       }
@@ -772,171 +230,94 @@ export default {
     
     switchTab(tab) {
       this.activeTab = tab
-      this.loadTabData(tab)
     },
     
-    async loadTabData(tab) {
-      switch(tab) {
-        case 'allPosts':
-          await this.loadAllPosts()
-          break
-        case 'reviewComments':
-          await this.loadReviewPosts()
-          break
-        case 'flaggedComments':
-          await this.loadFlaggedComments()
-          break
-        case 'statistics':
-          await this.loadStatistics()
-          break
-        case 'userList':
-          await this.loadUsers()
-          break
-      }
-    },
-    
-    async loadAllPosts() {
-      this.loadingAllPosts = true
-      try {
-        const response = await moderatorAPI.getAllPosts(this.selectedUserId)
-        this.allPosts = response.posts || []
-      } catch (error) {
-        console.error('Error loading all posts:', error)
-      } finally {
-        this.loadingAllPosts = false
-      }
-    },
-    
-    async loadReviewPosts() {
-      this.loadingReviewPosts = true
-      try {
-        const response = await moderatorAPI.getReviewQueue()
-        this.reviewItems = response.queue || []
-      } catch (error) {
-        console.error('Error loading review queue:', error)
-      } finally {
-        this.loadingReviewPosts = false
-      }
-    },
-    
-    async loadFlaggedComments() {
-      this.loadingFlaggedComments = true
-      try {
-        const response = await moderatorAPI.getFlaggedContent(this.selectedFlaggedUserId)
-        this.flaggedPosts = response.posts || []
-      } catch (error) {
-        console.error('Error loading flagged comments:', error)
-      } finally {
-        this.loadingFlaggedComments = false
-      }
-    },
-    
-    async loadStatistics() {
-      this.loadingStatistics = true
-      try {
-        const response = await moderatorAPI.getStatistics(this.selectedStatsUsername)
-        this.stats = response
-      } catch (error) {
-        console.error('Error loading statistics:', error)
-      } finally {
-        this.loadingStatistics = false
-      }
-    },
-    
-    async loadUsers() {
-      this.loadingUsers = true
-      try {
-        const response = await moderatorAPI.getUsers()
-        this.usersList = response.users || []
-      } catch (error) {
-        console.error('Error loading users:', error)
-      } finally {
-        this.loadingUsers = false
-      }
-    },
-    
-    async viewPostComments(postId) {
+    async handleViewComments(postId) {
       try {
         const response = await moderatorAPI.getPostComments(postId)
+        this.selectedPost = response.post || {}
         this.reviewComments = response.comments || []
-        this.reviewPost = response.post || {}
+        this.modalTitle = 'View Comments'
+        this.sectionTitle = 'All Comments'
+        this.showReviewActions = false
         this.showReviewModal = true
       } catch (error) {
         console.error('Error loading post comments:', error)
+        alert('Failed to load comments')
       }
     },
     
-    async reviewComment(commentId, action) {
+    async handleReviewComments(postId) {
+      try {
+        const response = await moderatorAPI.getPostForReview(postId)
+        this.selectedPost = response.post || {}
+        this.reviewComments = response.comments || []
+        this.modalTitle = 'Review Comments'
+        this.sectionTitle = 'Comments for Review'
+        this.showReviewActions = true
+        this.showReviewModal = true
+      } catch (error) {
+        console.error('Error loading post for review:', error)
+        alert('Failed to load comments for review')
+      }
+    },
+    
+    handleViewFlaggedComments(postId) {
+      // Similar to view comments but focused on flagged ones
+      this.handleViewComments(postId)
+    },
+    
+    async handleReviewComment(commentId, action) {
       try {
         await moderatorAPI.reviewComment(commentId, action)
         
-        // Refresh the comments
-        await this.viewPostComments(this.reviewPost.id)
+        // Show success message
+        const actionText = action === 'approve' ? 'approved' : action === 'hide' ? 'hidden' : 'deleted'
+        alert(`Comment ${actionText} successfully`)
         
-        // Refresh the review queue
-        await this.loadReviewPosts()
+        // Reload the current modal data
+        if (this.showReviewActions) {
+          await this.handleReviewComments(this.selectedPost.id)
+        } else {
+          await this.handleViewComments(this.selectedPost.id)
+        }
         
       } catch (error) {
         console.error('Error reviewing comment:', error)
+        alert('Failed to review comment')
       }
-    },
-    
-    reviewPostComments(postId) {
-      this.viewPostComments(postId)
     },
     
     closeReviewModal() {
       this.showReviewModal = false
+      this.selectedPost = {}
       this.reviewComments = []
-      this.reviewPost = {}
     },
     
     confirmLogout() {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       this.$router.push('/login')
-    },
-    
-    formatDate(date) {
-      if (!date) return 'Unknown date'
-      return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    },
-    
-    getAbuseRateClass(rate) {
-      if (rate < 10) return 'low'
-      if (rate < 30) return 'medium'
-      return 'high'
-    },
-    
-    getAbuseRateDescription(rate) {
-      if (rate < 10) return 'This user maintains excellent content quality.'
-      if (rate < 30) return 'Moderate abuse rate. Monitor occasionally.'
-      return 'High abuse rate. Requires close monitoring.'
     }
   }
 }
 </script>
 
 <style scoped>
+/* Dashboard Container */
 .dashboard-container {
   min-height: 100vh;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   opacity: 0;
-  transform: translateY(20px);
-  transition: all 0.6s ease;
+  transition: opacity 0.5s ease;
 }
 
 .dashboard-container.loaded {
   opacity: 1;
-  transform: translateY(0);
 }
 
+/* Header */
 .dashboard-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -969,7 +350,6 @@ export default {
 
 .logo-icon {
   font-size: 32px;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
 }
 
 .header-info {
@@ -1009,7 +389,6 @@ export default {
   padding: 8px 16px;
   background: rgba(255,255,255,0.1);
   border-radius: 20px;
-  backdrop-filter: blur(10px);
 }
 
 .user-avatar {
@@ -1042,7 +421,6 @@ export default {
 
 .logout-button {
   background: rgba(255,255,255,0.2);
-  backdrop-filter: blur(10px);
   border: 1px solid rgba(255,255,255,0.3);
   color: white;
   padding: 10px 20px;
@@ -1050,20 +428,13 @@ export default {
   cursor: pointer;
   font-weight: 500;
   transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .logout-button:hover {
   background: rgba(255,255,255,0.3);
-  transform: translateY(-2px);
 }
 
-.logout-icon {
-  font-size: 14px;
-}
-
+/* Dashboard Layout */
 .dashboard-layout {
   display: flex;
   max-width: 1400px;
@@ -1071,12 +442,11 @@ export default {
   min-height: calc(100vh - 80px);
 }
 
+/* Sidebar */
 .sidebar {
   width: 300px;
   background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(20px);
   border-right: 1px solid rgba(255,255,255,0.2);
-  padding: 0;
 }
 
 .sidebar-nav {
@@ -1099,13 +469,11 @@ export default {
 
 .nav-item:hover {
   background: rgba(102, 126, 234, 0.1);
-  transform: translateX(4px);
 }
 
 .nav-item.active {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
 .nav-icon {
@@ -1150,852 +518,20 @@ export default {
   border-radius: 50%;
   background: currentColor;
   opacity: 0;
-  transition: all 0.3s ease;
 }
 
 .nav-item.active .nav-indicator {
   opacity: 1;
 }
 
+/* Main Content */
 .main-content {
   flex: 1;
   padding: 40px;
   background: rgba(255,255,255,0.5);
-  backdrop-filter: blur(10px);
 }
 
-.content-section {
-  animation: fadeIn 0.5s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 32px;
-}
-
-.section-title h2 {
-  font-size: 32px;
-  font-weight: 700;
-  color: #2c3e50;
-  margin: 0 0 8px 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.section-subtitle {
-  color: #7f8c8d;
-  font-size: 16px;
-  margin: 0;
-}
-
-.section-controls {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-}
-
-.filter-controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.filter-label {
-  font-weight: 600;
-  color: #2c3e50;
-  font-size: 14px;
-}
-
-.modern-select {
-  padding: 10px 16px;
-  border: 2px solid #e9ecef;
-  border-radius: 12px;
-  background: white;
-  font-size: 14px;
-  transition: all 0.3s ease;
-}
-
-.modern-select:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-.queue-stats {
-  display: flex;
-  gap: 16px;
-}
-
-.stat-card.mini {
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
-  text-align: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  border-left: 4px solid #667eea;
-}
-
-.stat-number {
-  font-size: 24px;
-  font-weight: 700;
-  color: #2c3e50;
-  display: block;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: #7f8c8d;
-}
-
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-  color: #7f8c8d;
-}
-
-.loading-state .loading-spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid rgba(102, 126, 234, 0.2);
-  border-top: 4px solid #667eea;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 20px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.posts-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  gap: 24px;
-}
-
-.post-card {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  border: 1px solid rgba(255,255,255,0.2);
-  transition: all 0.3s ease;
-}
-
-.post-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-}
-
-.post-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 16px;
-}
-
-.post-author {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.author-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 600;
-  font-size: 16px;
-}
-
-.author-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.author-name {
-  font-weight: 600;
-  color: #2c3e50;
-}
-
-.post-date {
-  color: #7f8c8d;
-  font-size: 12px;
-}
-
-.post-stats {
-  display: flex;
-  gap: 8px;
-}
-
-.stat-chip {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  background: rgba(102, 126, 234, 0.1);
-  border-radius: 12px;
-  font-size: 12px;
-  color: #2c3e50;
-}
-
-.post-content {
-  flex: 1;
-  margin-bottom: 20px;
-}
-
-.post-content p {
-  color: #2c3e50;
-  line-height: 1.6;
-  margin: 0;
-}
-
-.post-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 16px;
-  border-top: 1px solid #e9ecef;
-}
-
-.comment-breakdown {
-  display: flex;
-  gap: 12px;
-  font-size: 12px;
-}
-
-.comment-stat {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.dot.approved { background: #27ae60; }
-.dot.pending { background: #f39c12; }
-.dot.hidden { background: #e74c3c; }
-
-.post-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.action-button {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.action-button.primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.action-button.primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-}
-
-.action-button.secondary {
-  background: rgba(102, 126, 234, 0.1);
-  color: #667eea;
-  border: 1px solid rgba(102, 126, 234, 0.2);
-}
-
-.action-button.secondary:hover {
-  background: rgba(102, 126, 234, 0.2);
-  transform: translateY(-1px);
-}
-
-.button-icon {
-  font-size: 12px;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-  text-align: center;
-  grid-column: 1 / -1;
-}
-
-.empty-state.success {
-  background: rgba(39, 174, 96, 0.05);
-  border-radius: 16px;
-  border: 1px solid rgba(39, 174, 96, 0.2);
-}
-
-.empty-icon {
-  font-size: 64px;
-  margin-bottom: 24px;
-  opacity: 0.6;
-}
-
-.empty-state h3 {
-  color: #2c3e50;
-  font-size: 24px;
-  margin: 0 0 12px 0;
-  font-weight: 600;
-}
-
-.empty-state p {
-  color: #7f8c8d;
-  font-size: 16px;
-  margin: 0;
-}
-
-.review-queue {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.review-item {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  transition: all 0.3s ease;
-}
-
-.review-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-}
-
-.review-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.user-profile-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-}
-
-.user-avatar-large {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 600;
-  font-size: 20px;
-}
-
-.user-details {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.user-name {
-  font-weight: 600;
-  color: #2c3e50;
-  font-size: 18px;
-}
-
-.user-metadata {
-  display: flex;
-  gap: 12px;
-  font-size: 12px;
-  color: #7f8c8d;
-}
-
-.user-status.active { color: #27ae60; }
-.user-status.inactive { color: #e74c3c; }
-
-.abuse-rate-indicator {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.rate-label {
-  font-size: 12px;
-  color: #7f8c8d;
-}
-
-.rate-bar {
-  flex: 1;
-  height: 6px;
-  background: #e9ecef;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.rate-fill {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 0.3s ease;
-}
-
-.rate-fill.low { background: #27ae60; }
-.rate-fill.medium { background: #f39c12; }
-.rate-fill.high { background: #e74c3c; }
-
-.rate-value {
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.rate-value.low { color: #27ae60; }
-.rate-value.medium { color: #f39c12; }
-.rate-value.high { color: #e74c3c; }
-
-.post-preview {
-  background: #f8f9fa;
-  padding: 16px;
-  border-radius: 12px;
-}
-
-.post-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-  font-size: 12px;
-  color: #7f8c8d;
-}
-
-.pending-count {
-  color: #f39c12;
-  font-weight: 600;
-}
-
-.post-content-preview p {
-  margin: 0;
-  color: #2c3e50;
-  line-height: 1.5;
-}
-
-.review-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
-}
-
-.stat-card {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  border-left: 4px solid #667eea;
-}
-
-.stat-card.primary { border-left-color: #667eea; }
-.stat-card.secondary { border-left-color: #f5576c; }
-.stat-card.info { border-left-color: #3498db; }
-.stat-card.success { border-left-color: #27ae60; }
-.stat-card.warning { border-left-color: #f39c12; }
-.stat-card.danger { border-left-color: #e74c3c; }
-
-.stat-icon {
-  font-size: 32px;
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(102, 126, 234, 0.1);
-  border-radius: 12px;
-}
-
-.stat-content {
-  flex: 1;
-}
-
-.stat-number {
-  font-size: 28px;
-  font-weight: 700;
-  color: #2c3e50;
-  display: block;
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #7f8c8d;
-  margin: 4px 0 0 0;
-}
-
-.performance-metrics {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-}
-
-.metric-card {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-}
-
-.metric-card.highlight {
-  border-left: 4px solid #667eea;
-}
-
-.metric-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.metric-header h4 {
-  margin: 0;
-  color: #2c3e50;
-}
-
-.metric-percentage {
-  font-size: 24px;
-  font-weight: 700;
-  color: #667eea;
-}
-
-.metric-bar {
-  height: 8px;
-  background: #e9ecef;
-  border-radius: 4px;
-  overflow: hidden;
-  margin-bottom: 12px;
-}
-
-.metric-fill {
-  height: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 4px;
-  transition: width 0.3s ease;
-}
-
-.metric-fill.danger {
-  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-}
-
-.metric-description {
-  font-size: 14px;
-  color: #7f8c8d;
-  margin: 0;
-}
-
-.user-stats-header {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin-bottom: 30px;
-  padding: 24px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-}
-
-.user-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
-}
-
-.abuse-rate-card {
-  background: white;
-  border-radius: 16px;
-  padding: 30px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  text-align: center;
-}
-
-.rate-circle {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 20px;
-  font-weight: 700;
-  font-size: 24px;
-  border: 8px solid;
-}
-
-.rate-circle.low {
-  background: rgba(39, 174, 96, 0.1);
-  border-color: rgba(39, 174, 96, 0.3);
-  color: #27ae60;
-}
-
-.rate-circle.medium {
-  background: rgba(243, 156, 18, 0.1);
-  border-color: rgba(243, 156, 18, 0.3);
-  color: #f39c12;
-}
-
-.rate-circle.high {
-  background: rgba(231, 76, 60, 0.1);
-  border-color: rgba(231, 76, 60, 0.3);
-  color: #e74c3c;
-}
-
-.users-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-}
-
-.user-card {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  transition: all 0.3s ease;
-}
-
-.user-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-}
-
-.user-card-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.user-basic-info {
-  flex: 1;
-}
-
-.user-role-badge {
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.user-role-badge.moderator {
-  background: rgba(102, 126, 234, 0.1);
-  color: #667eea;
-}
-
-.user-role-badge.user {
-  background: rgba(39, 174, 96, 0.1);
-  color: #27ae60;
-}
-
-.user-status-indicator {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.user-status-indicator.active .status-dot {
-  background: #27ae60;
-}
-
-.user-status-indicator.inactive .status-dot {
-  background: #e74c3c;
-}
-
-.user-card-stats {
-  margin-bottom: 16px;
-}
-
-.stat-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-
-.stat-item.warning {
-  background: rgba(243, 156, 18, 0.1);
-}
-
-.stat-details {
-  display: flex;
-  flex-direction: column;
-}
-
-.stat-number {
-  font-size: 18px;
-  font-weight: 700;
-  color: #2c3e50;
-}
-
-.user-card-footer {
-  padding-top: 16px;
-  border-top: 1px solid #e9ecef;
-}
-
-.join-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 12px;
-  color: #7f8c8d;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  animation: fadeIn 0.3s ease;
-}
-
-.modern-modal {
-  background: white;
-  border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  max-width: 90vw;
-  max-height: 90vh;
-  overflow: hidden;
-  animation: modalSlideIn 0.4s ease;
-}
-
-.modal {
-  width: 500px;
-}
-
-.large-modal {
-  width: 800px;
-}
-
-@keyframes modalSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 24px 28px;
-  border-bottom: 1px solid #e9ecef;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-}
-
-.modal-title h3 {
-  margin: 0;
-  color: #2c3e50;
-  font-size: 20px;
-  font-weight: 600;
-}
-
-.modal-subtitle {
-  color: #7f8c8d;
-  font-size: 14px;
-  margin: 4px 0 0 0;
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 50%;
-  transition: all 0.3s ease;
-  color: #95a5a6;
-}
-
-.modal-close:hover {
-  background: rgba(0,0,0,0.1);
-  color: #2c3e50;
-}
-
-.modal-body {
-  padding: 28px;
-  max-height: 70vh;
-  overflow-y: auto;
-}
-
-.modal-footer {
-  padding: 20px 28px;
-  border-top: 1px solid #e9ecef;
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  background: #f8f9fa;
-}
-
+/* Modal Buttons */
 .modal-button {
   padding: 12px 24px;
   border: none;
@@ -2008,14 +544,13 @@ export default {
   gap: 6px;
 }
 
-.modal-button.primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
 .modal-button.secondary {
   background: #e9ecef;
   color: #495057;
+}
+
+.modal-button.secondary:hover {
+  background: #dee2e6;
 }
 
 .modal-button.danger {
@@ -2023,216 +558,13 @@ export default {
   color: white;
 }
 
-.modal-button:hover:not(:disabled) {
+.modal-button.danger:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
 }
 
-.post-context {
-  background: #f8f9fa;
-  padding: 20px;
-  border-radius: 12px;
-  margin-bottom: 24px;
-  border-left: 4px solid #667eea;
-}
-
-.post-content-display h4 {
-  margin: 0 0 8px 0;
-  color: #2c3e50;
-}
-
-.post-content-display p {
-  margin: 0;
-  color: #2c3e50;
-  line-height: 1.6;
-}
-
-.comments-review-section h4 {
-  margin-bottom: 16px;
-  color: #2c3e50;
-}
-
-.comments-review-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.comment-review-card {
-  background: white;
-  border: 1px solid #e9ecef;
-  border-radius: 12px;
-  padding: 20px;
-  transition: all 0.3s ease;
-}
-
-.comment-review-card:hover {
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-.comment-review-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 12px;
-}
-
-.comment-author-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.comment-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.comment-meta {
-  display: flex;
-  flex-direction: column;
-}
-
-.comment-author {
-  color: #2c3e50;
-  font-size: 14px;
-}
-
-.comment-date {
-  color: #7f8c8d;
-  font-size: 12px;
-}
-
-.comment-flags {
-  display: flex;
-  gap: 8px;
-}
-
-.status-badge {
-  padding: 4px 8px;
-  border-radius: 8px;
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.status-badge.pending {
-  background: rgba(243, 156, 18, 0.1);
-  color: #f39c12;
-}
-
-.comment-content {
-  margin-bottom: 12px;
-}
-
-.comment-content p {
-  margin: 0;
-  color: #2c3e50;
-  line-height: 1.5;
-}
-
-.comment-analysis {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 16px;
-  padding: 12px;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-
-.analysis-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-}
-
-.analysis-label {
-  font-weight: 600;
-  color: #7f8c8d;
-}
-
-.flagged-words-list {
-  color: #e74c3c;
-  font-weight: 500;
-}
-
-.confidence-score {
-  color: #f39c12;
-  font-weight: 600;
-}
-
-.comment-review-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.review-action-btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.review-action-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none !important;
-}
-
-.review-action-btn.approve {
-  background: rgba(39, 174, 96, 0.1);
-  color: #27ae60;
-  border: 1px solid rgba(39, 174, 96, 0.2);
-}
-
-.review-action-btn.approve:hover:not(:disabled) {
-  background: #27ae60;
-  color: white;
-}
-
-.review-action-btn.hide {
-  background: rgba(243, 156, 18, 0.1);
-  color: #f39c12;
-  border: 1px solid rgba(243, 156, 18, 0.2);
-}
-
-.review-action-btn.hide:hover:not(:disabled) {
-  background: #f39c12;
-  color: white;
-}
-
-.review-action-btn.delete {
-  background: rgba(231, 76, 60, 0.1);
-  color: #e74c3c;
-  border: 1px solid rgba(231, 76, 60, 0.2);
-}
-
-.review-action-btn.delete:hover:not(:disabled) {
-  background: #e74c3c;
-  color: white;
-}
-
-.btn-icon {
-  font-size: 12px;
-}
-
-@media (max-width: 768px) {
+/* Responsive Design */
+@media (max-width: 1200px) {
   .dashboard-layout {
     flex-direction: column;
   }
@@ -2254,50 +586,29 @@ export default {
     padding: 12px 20px;
     white-space: nowrap;
     min-width: auto;
+    flex: 1;
   }
   
   .main-content {
     padding: 20px;
     order: 1;
   }
-  
-  .section-header {
+}
+
+@media (max-width: 768px) {
+  .header-content {
+    padding: 15px 20px;
     flex-direction: column;
-    gap: 16px;
-    align-items: flex-start;
+    gap: 15px;
   }
   
-  .posts-grid {
-    grid-template-columns: 1fr;
+  .header-right {
+    width: 100%;
+    justify-content: space-between;
   }
   
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .performance-metrics {
-    grid-template-columns: 1fr;
-  }
-  
-  .users-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .modal {
-    margin: 20px;
-    width: auto;
-  }
-  
-  .large-modal {
-    width: auto;
-  }
-  
-  .review-actions {
-    flex-direction: column;
-  }
-  
-  .comment-review-actions {
-    flex-direction: column;
+  .main-content {
+    padding: 15px;
   }
 }
 </style>
