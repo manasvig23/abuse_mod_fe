@@ -33,7 +33,7 @@
                 </div>
                 <div class="comment-flags">
                   <div class="status-badge" :class="getStatusClass(comment.status)">
-                    {{ comment.status }}
+                    {{ comment.label || comment.status }}
                   </div>
                 </div>
               </div>
@@ -53,6 +53,7 @@
                 </div>
               </div>
               
+              <!-- Review actions (for Review Comments section) -->
               <div class="comment-review-actions" v-if="showActions">
                 <button 
                   @click="$emit('review-comment', comment.id, 'approve')" 
@@ -69,6 +70,24 @@
                 >
                   <span class="btn-icon">🚫</span>
                   Hide
+                </button>
+                <button 
+                  @click="handleDeleteComment(comment.id, comment.author_username)" 
+                  class="review-action-btn delete"
+                >
+                  <span class="btn-icon">🗑️</span>
+                  Delete
+                </button>
+              </div>
+              
+              <!-- View actions (for All Posts -> View Comments) -->
+              <div class="comment-view-actions" v-if="!showActions">
+                <button 
+                  @click="handleDeleteComment(comment.id, comment.author_username)" 
+                  class="delete-action-btn"
+                >
+                  <span class="btn-icon">🗑️</span>
+                  Delete Comment
                 </button>
               </div>
             </div>
@@ -127,11 +146,21 @@ export default {
     getStatusClass(status) {
       const statusMap = {
         'pending': 'pending',
+        'pending_review': 'pending',
         'approved': 'approved',
         'hidden': 'hidden',
         'flagged': 'flagged'
       }
       return statusMap[status] || 'pending'
+    },
+    handleDeleteComment(commentId, authorUsername) {
+      const confirmed = confirm(
+        `Are you sure you want to permanently delete this comment by ${authorUsername}?\n\nThis action cannot be undone.`
+      )
+      
+      if (confirmed) {
+        this.$emit('review-comment', commentId, 'delete')
+      }
     }
   }
 }
@@ -425,6 +454,48 @@ export default {
 .review-action-btn.hide:hover:not(:disabled) {
   background: #f39c12;
   color: white;
+}
+
+.review-action-btn.delete {
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+  border: 1px solid rgba(231, 76, 60, 0.2);
+}
+
+.review-action-btn.delete:hover:not(:disabled) {
+  background: #e74c3c;
+  color: white;
+}
+
+.comment-view-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e9ecef;
+}
+
+.delete-action-btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 16px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+  border: 1px solid rgba(231, 76, 60, 0.2);
+}
+
+.delete-action-btn:hover:not(:disabled) {
+  background: #e74c3c;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
 }
 
 .btn-icon {

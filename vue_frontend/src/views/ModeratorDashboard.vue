@@ -246,6 +246,30 @@ export default {
         alert('Failed to load comments')
       }
     },
+
+    async handleReviewComment(commentId, action) {
+      try {
+        const response = await moderatorAPI.reviewComment(commentId, action)
+        
+        let actionText = action === 'approve' ? 'approved' : action === 'hide' ? 'hidden' : 'deleted'
+        
+        if (action === 'delete') {
+          alert(`Comment by ${response.author || 'user'} has been deleted permanently`)
+        } else {
+          alert(`Comment ${actionText} successfully`)
+        }
+        
+        if (this.showReviewActions) {
+          await this.handleReviewComments(this.selectedPost.id)
+        } else {
+          await this.handleViewComments(this.selectedPost.id)
+        }
+        
+      } catch (error) {
+        console.error('Error reviewing comment:', error)
+        alert('Failed to process comment action')
+      }
+    },
     
     async handleReviewComments(postId) {
       try {
@@ -265,27 +289,6 @@ export default {
     handleViewFlaggedComments(postId) {
       // Similar to view comments but focused on flagged ones
       this.handleViewComments(postId)
-    },
-    
-    async handleReviewComment(commentId, action) {
-      try {
-        await moderatorAPI.reviewComment(commentId, action)
-        
-        // Show success message
-        const actionText = action === 'approve' ? 'approved' : action === 'hide' ? 'hidden' : 'deleted'
-        alert(`Comment ${actionText} successfully`)
-        
-        // Reload the current modal data
-        if (this.showReviewActions) {
-          await this.handleReviewComments(this.selectedPost.id)
-        } else {
-          await this.handleViewComments(this.selectedPost.id)
-        }
-        
-      } catch (error) {
-        console.error('Error reviewing comment:', error)
-        alert('Failed to review comment')
-      }
     },
     
     closeReviewModal() {
