@@ -88,7 +88,7 @@
                 <div class="post-stats">
                   <div class="stat-item">
                     <span class="stat-icon">💬</span>
-                    <span class="stat-text">{{ post.total_comments || 0 }} comments</span>
+                    <span class="stat-text">{{ post.comments ? post.comments.length : 0 }} comments</span>
                   </div>
                 </div>
                 <button @click="viewComments(post, 'my')" class="action-button primary">
@@ -177,7 +177,7 @@
           <h3>Confirm Logout</h3>
         </div>
         <div class="modal-body">
-          <p>Are you sure you want to logout from your account?</p>
+          <p style="color: #333333;">Are you sure you want to logout from your account?</p>
         </div>
         <div class="modal-footer">
           <button @click="showLogoutModal = false" class="modal-button secondary">Cancel</button>
@@ -438,6 +438,11 @@ export default {
         month: 'short',
         day: 'numeric'
       })
+    },
+
+    getVisibleCommentsCount(post) {
+    if (!post.comments) return 0
+    return post.comments.filter(comment => comment.status === 'approved').length
     }
   }
 }
@@ -1098,7 +1103,7 @@ export default {
   margin-bottom: 16px;
   background: white;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(222, 194, 194, 0.05);
   border: 1px solid #f0f0f0;
 }
 
@@ -1198,6 +1203,7 @@ export default {
   resize: vertical;
   transition: all 0.3s ease;
   margin-bottom: 12px;
+  background-color: white;
 }
 
 .comment-input:focus {
@@ -1322,7 +1328,7 @@ export default {
   .modal-body {
     padding: 20px;
   }
-  
+
   .modal-footer {
     padding: 16px 20px;
     flex-direction: column;

@@ -165,6 +165,8 @@ export default {
   padding: 28px;
   max-height: 70vh;
   overflow-y: auto;
+  background-color: #ffffffff
+
 }
 
 .modal-footer {

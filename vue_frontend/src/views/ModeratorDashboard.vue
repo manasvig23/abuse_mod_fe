@@ -150,10 +150,10 @@
       title="Confirm Logout"
       size="small"
       type="modern"
-      :show-footer="false"
+      :show-footer="true"
       @close="showLogoutModal = false"
     >
-      <p>Are you sure you want to logout from your moderator account?</p>
+      <p style="color: #333333;">Are you sure you want to logout from your moderator account?</p>
       
       <template #footer>
         <button @click="showLogoutModal = false" class="modal-button secondary">Cancel</button>
