@@ -75,7 +75,7 @@
       <div class="performance-metrics">
         <div class="metric-card highlight">
           <div class="metric-header">
-            <h4>AI Efficiency</h4>
+            <h4>Automation Efficiency</h4>
             <span class="metric-percentage">{{ stats.stats.ai_efficiency_percent }}%</span>
           </div>
           <div class="metric-bar">

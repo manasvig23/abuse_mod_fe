@@ -195,7 +195,7 @@
         <div class="modal-body">
           <div class="form-group">
             <label class="form-label">What's on your mind?</label>
-            <textarea 
+            <textarea
               v-model="newPost.content" 
               placeholder="Share your thoughts with the community..." 
               class="form-textarea"
@@ -1024,6 +1024,7 @@ export default {
   border-radius: 12px;
   font-size: 16px;
   font-family: inherit;
+  background-color: #ffffff;
   resize: vertical;
   transition: all 0.3s ease;
 }
@@ -1031,7 +1032,7 @@ export default {
 .form-textarea:focus {
   outline: none;
   border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 3px rgba(228, 221, 221, 0.1);
 }
 
 .character-count {
