@@ -388,36 +388,62 @@ export default {
     },
 
     async submitComment() {
-      if (!this.newComment.trim()) {
-        return
-      }
-
-      this.submittingComment = true
-      try {
-        const response = await userAPI.createComment({
-          text: this.newComment,
-          post_id: this.selectedPost.id
-        })
-        
-        if (response.visible_in_feed) {
-          alert('Comment posted successfully!')
-        } else if (response.auto_processed) {
-          alert('Comment flagged as inappropriate and has been hidden.')
-        } else {
-          alert('Comment submitted for moderation review.')
-        }
-        
-        this.newComment = ''
-        await this.loadExploreFeed()
-        this.closeCommentsModal()
-        
-      } catch (error) {
-        console.error('Error submitting comment:', error)
-        alert('Failed to post comment. Please try again.')
-      } finally {
-        this.submittingComment = false
-      }
-    },
+    if (!this.newComment.trim()) {
+    return
+  }
+  this.submittingComment = true
+  try {
+    const response = await userAPI.createComment({
+      text: this.newComment,
+      post_id: this.selectedPost.id
+    })
+    
+    // Handle different response scenarios
+    if (response.spam_detected) {
+      // SPAM BLOCKED - Show spam message
+      alert(response.spam_message || '🚫 Your comment has been detected as spam and hidden.')
+      this.newComment = '' // Clear the comment
+      this.closeCommentsModal()
+      
+    } else if (response.warning) {
+      // WARNING - Comment posted but user warned
+      alert(response.warning)
+      this.newComment = ''
+      await this.loadExploreFeed()
+      this.closeCommentsModal()
+      
+    } else if (response.visible_in_feed) {
+      // SUCCESS - Clean comment approved
+      alert('✅ Comment posted successfully!')
+      this.newComment = ''
+      await this.loadExploreFeed()
+      this.closeCommentsModal()
+      
+    } else if (response.auto_processed) {
+      // ABUSE DETECTED - Flagged for abuse (not spam)
+      alert('⚠️ Your comment has been flagged as potentially abusive and is under review.')
+      this.newComment = ''
+      this.closeCommentsModal()
+      
+    } else {
+      // PENDING REVIEW - Needs human moderation
+      alert('⏳ Your comment has been submitted for moderation review.')
+      this.newComment = ''
+      this.closeCommentsModal()
+    }
+    } catch (error) {
+    console.error('Error submitting comment:', error)
+    
+    // Check if error response contains spam/abuse info
+    if (error.response?.data?.detail) {
+      alert(error.response.data.detail)
+    } else {
+      alert('❌ Failed to post comment. Please try again.')
+    }
+  } finally {
+    this.submittingComment = false
+  }
+},
 
     closeCommentsModal() {
       this.showCommentModal = false

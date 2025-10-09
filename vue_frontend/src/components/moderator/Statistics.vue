@@ -63,6 +63,15 @@
           </div>
         </div>
         
+        <!-- NEW: Spam Comments Card -->
+        <div class="stat-card warning">
+          <div class="stat-icon">🚫</div>
+          <div class="stat-content">
+            <h3 class="stat-number">{{ stats.stats.spam_comments }}</h3>
+            <p class="stat-label">Spam Comments</p>
+          </div>
+        </div>
+        
         <div class="stat-card danger">
           <div class="stat-icon">⚖️</div>
           <div class="stat-content">
@@ -93,6 +102,18 @@
             <div class="metric-fill danger" :style="{ width: stats.stats.abuse_detection_rate + '%' }"></div>
           </div>
           <p class="metric-description">Percentage of abusive content detected</p>
+        </div>
+        
+        <!-- NEW: Spam Detection Rate -->
+        <div class="metric-card highlight">
+          <div class="metric-header">
+            <h4>Spam Detection Rate</h4>
+            <span class="metric-percentage">{{ stats.stats.spam_detection_rate }}%</span>
+          </div>
+          <div class="metric-bar">
+            <div class="metric-fill warning" :style="{ width: stats.stats.spam_detection_rate + '%' }"></div>
+          </div>
+          <p class="metric-description">Percentage of spam content detected</p>
         </div>
       </div>
     </div>
@@ -151,17 +172,40 @@
             <p class="stat-label">Pending Review</p>
           </div>
         </div>
+        
+        <!-- NEW: Spam Comments Card -->
+        <div class="stat-card warning">
+          <div class="stat-icon">🚫</div>
+          <div class="stat-content">
+            <h3 class="stat-number">{{ stats.stats.spam_comments }}</h3>
+            <p class="stat-label">Spam Comments</p>
+          </div>
+        </div>
       </div>
       
+      <!-- NEW: Updated Abuse + Spam Rate Display -->
       <div class="abuse-rate-card">
-        <h4>User Abuse Rate</h4>
-        <div class="abuse-rate-display">
-          <div class="rate-circle" :class="getAbuseRateClass(stats.stats.abuse_rate_percent)">
-            <span class="rate-number">{{ stats.stats.abuse_rate_percent }}%</span>
+        <h4>User Content Quality</h4>
+        <div class="rate-display-grid">
+          <div class="abuse-rate-display">
+            <div class="rate-circle" :class="getAbuseRateClass(stats.stats.abuse_rate_percent)">
+              <span class="rate-number">{{ stats.stats.abuse_rate_percent }}%</span>
+            </div>
+            <p class="rate-label">Abuse Rate</p>
+            <p class="rate-description">
+              {{ getAbuseRateDescription(stats.stats.abuse_rate_percent) }}
+            </p>
           </div>
-          <p class="rate-description">
-            {{ getAbuseRateDescription(stats.stats.abuse_rate_percent) }}
-          </p>
+          
+          <div class="spam-rate-display">
+            <div class="rate-circle" :class="getSpamRateClass(stats.stats.spam_rate_percent)">
+              <span class="rate-number">{{ stats.stats.spam_rate_percent }}%</span>
+            </div>
+            <p class="rate-label">Spam Rate</p>
+            <p class="rate-description">
+              {{ getSpamRateDescription(stats.stats.spam_rate_percent) }}
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -224,6 +268,16 @@ export default {
       if (!rate || rate < 10) return 'This user maintains excellent content quality.'
       if (rate < 30) return 'Moderate abuse rate. Monitor occasionally.'
       return 'High abuse rate. Requires close monitoring.'
+    },
+    getSpamRateClass(rate) {
+      if (!rate || rate < 5) return 'low'
+      if (rate < 15) return 'medium'
+      return 'high'
+    },
+    getSpamRateDescription(rate) {
+      if (!rate || rate < 5) return 'Excellent - Minimal spam activity.'
+      if (rate < 15) return 'Moderate spam detected. Monitor activity.'
+      return 'High spam rate. User may need restrictions.'
     }
   }
 }
@@ -400,6 +454,10 @@ export default {
   background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
 }
 
+.metric-fill.warning {
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+}
+
 .metric-description {
   font-size: 14px;
   color: #7f8c8d;
@@ -471,7 +529,15 @@ export default {
   color: #2c3e50;
 }
 
-.abuse-rate-display {
+.rate-display-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.abuse-rate-display,
+.spam-rate-display {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -508,6 +574,12 @@ export default {
   color: #e74c3c;
 }
 
+.rate-label {
+  margin: 10px 0 5px 0;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
 .rate-description {
   color: #7f8c8d;
   font-size: 14px;
@@ -533,6 +605,10 @@ export default {
   }
   
   .performance-metrics {
+    grid-template-columns: 1fr;
+  }
+  
+  .rate-display-grid {
     grid-template-columns: 1fr;
   }
 }
