@@ -73,6 +73,28 @@ export const userAPI = {
   async createComment(commentData) {
     const response = await api.post('/api/comments/', commentData)
     return response.data
+  },
+
+  async deleteOwnPost(postId, reason) {
+    const response = await api.delete(`/api/posts/${postId}`, {
+      data: { reason }
+    })
+    return response.data
+  },
+
+  async getDeletedPostsNotifications() {
+    const response = await api.get('/api/user/deleted-posts')
+    return response.data
+  },
+
+  async markDeletedPostViewed(deletedPostId) {
+    const response = await api.put(`/api/user/deleted-posts/${deletedPostId}/mark-viewed`)
+    return response.data
+  },
+
+  async getDeletedPostsCount() {
+    const response = await api.get('/api/user/deleted-posts-count')
+    return response.data
   }
 }
 
@@ -127,12 +149,17 @@ export const moderatorAPI = {
       reason
     })
     return response.data
+  },
+
+  async deletePost(postId, reason) {
+    const response = await api.delete(`/api/moderator/posts/${postId}`, {
+      data: { reason }
+    })
+    return response.data
   }
 }
 
-// ==================== ADMIN API ====================
-// Only accessible when username === 'admin'
-
+// Admin API
 export const adminAPI = {
   async getAllModerators() {
     const response = await api.get('/api/admin/moderators')

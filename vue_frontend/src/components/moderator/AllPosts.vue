@@ -67,6 +67,13 @@
               <span class="button-icon">👁️</span>
               View Comments
             </button>
+            <button 
+              @click="$emit('delete-post', post)" 
+              class="action-button danger"
+            >
+              <span class="button-icon">🗑️</span>
+              Delete Post
+            </button>
           </div>
         </div>
       </div>
@@ -98,7 +105,7 @@ export default {
       default: () => []
     }
   },
-  emits: ['view-comments'],
+  emits: ['view-comments', 'delete-post'],
   data() {
     return {
       posts: [],
@@ -346,6 +353,16 @@ export default {
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
+.action-button.danger {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: white;
+}
+
+.action-button.danger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+}
+
 .button-icon {
   font-size: 12px;
 }
@@ -359,6 +376,16 @@ export default {
     flex-direction: column;
     gap: 16px;
     align-items: flex-start;
+  }
+  
+  .post-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .action-button {
+    width: 100%;
+    justify-content: center;
   }
 }
 </style>

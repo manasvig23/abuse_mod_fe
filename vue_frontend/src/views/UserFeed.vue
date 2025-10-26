@@ -5,15 +5,20 @@
       <div class="header-content">
         <div class="header-left">
           <div class="logo-section">
-            <div class="logo-icon"></div>
+            <div class="logo-icon">🛡️</div>
             <h1 class="welcome-text">
               Welcome back, <span class="username-highlight">{{ user.username }}</span>!
             </h1>
           </div>
         </div>
         <div class="header-right">
+          <!-- Notification Bell for Deleted Posts -->
+          <button v-if="deletedPostsCount > 0" @click="loadDeletedPostsNotifications" class="notification-button">
+            <span class="notification-icon">🔔</span>
+            <span class="notification-badge">{{ deletedPostsCount }}</span>
+          </button>
+          
           <button @click="showLogoutModal = true" class="logout-button">
-            <span class="logout-icon"></span>
             Logout
           </button>
         </div>
@@ -30,7 +35,7 @@
             :class="{ active: activeTab === 'myProfile' }" 
             @click="switchTab('myProfile')"
           >
-            <div class="nav-icon"></div>
+            <div class="nav-icon">📝</div>
             <span class="nav-text">My Posts</span>
             <div class="nav-indicator"></div>
           </div>
@@ -39,7 +44,7 @@
             :class="{ active: activeTab === 'exploreFeed' }" 
             @click="switchTab('exploreFeed')"
           >
-            <div class="nav-icon"></div>
+            <div class="nav-icon">🌍</div>
             <span class="nav-text">Explore Feed</span>
             <div class="nav-indicator"></div>
           </div>
@@ -56,7 +61,7 @@
               <p class="section-subtitle">Manage and view your content</p>
             </div>
             <button @click="showCreatePostModal = true" class="create-button">
-              <span class="button-icon"></span>
+              <span class="button-icon">➕</span>
               Create New Post
             </button>
           </div>
@@ -91,14 +96,20 @@
                     <span class="stat-text">{{ post.comments ? post.comments.length : 0 }} comments</span>
                   </div>
                 </div>
-                <button @click="viewComments(post, 'my')" class="action-button primary">
-                  View Comments
-                </button>
+                <div class="post-actions">
+                  <button @click="viewComments(post, 'my')" class="action-button primary">
+                    View Comments
+                  </button>
+                  <button @click="handleDeleteOwnPost(post)" class="action-button danger">
+                    <span class="button-icon">🗑️</span>
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
             
             <div v-if="myPosts.length === 0" class="empty-state">
-              <div class="empty-icon"></div>
+              <div class="empty-icon">📝</div>
               <h3>No posts yet</h3>
               <p>Share your thoughts with the community</p>
               <button @click="showCreatePostModal = true" class="create-button">
@@ -160,7 +171,7 @@
             </div>
             
             <div v-if="explorePosts.length === 0" class="empty-state">
-              <div class="empty-icon"></div>
+              <div class="empty-icon">🌍</div>
               <h3>No posts to explore</h3>
               <p>Check back later for new content</p>
             </div>
@@ -211,6 +222,102 @@
             <span v-if="creatingPost" class="loading-spinner-small"></span>
             {{ creatingPost ? 'Creating...' : 'Create Post' }}
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Own Post Modal -->
+    <div v-if="showDeleteOwnPostModal" class="modal-overlay" @click="closeDeleteOwnPostModal">
+      <div class="modal large-modal" @click.stop>
+        <div class="modal-header">
+          <h3>Delete Your Post</h3>
+        </div>
+        <div class="modal-body">
+          <p style="color: #e74c3c; font-weight: 600; margin-bottom: 20px;">
+            ⚠️ This action cannot be undone!
+          </p>
+          
+          <div class="post-preview-box">
+            <h4>Post Content:</h4>
+            <p>{{ postToDeleteOwn.content }}</p>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Select Deletion Reason:</label>
+            <select v-model="ownDeletionReason" class="form-select">
+              <option value="">-- Select a reason --</option>
+              <option value="I want to repost with corrections">Want to repost with corrections</option>
+              <option value="Posted by mistake">Posted by mistake</option>
+              <option value="No longer relevant">No longer relevant</option>
+              <option value="Privacy concerns">Privacy concerns</option>
+              <option value="Duplicate post">Duplicate post</option>
+              <option value="Changed my mind">Changed my mind</option>
+              <option value="Other personal reason">Other personal reason</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button @click="closeDeleteOwnPostModal" class="modal-button secondary">Cancel</button>
+          <button 
+            @click="confirmDeleteOwnPost" 
+            class="modal-button danger"
+            :disabled="!ownDeletionReason || deletingOwnPost"
+          >
+            <span v-if="deletingOwnPost" class="loading-spinner-small"></span>
+            {{ deletingOwnPost ? 'Deleting...' : 'Delete Post' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Deleted Posts Notifications Modal -->
+    <div v-if="showDeletedPostsModal" class="modal-overlay" @click="showDeletedPostsModal = false">
+      <div class="modal large-modal" @click.stop>
+        <div class="modal-header">
+          <h3>🔔 Deleted Posts Notifications</h3>
+        </div>
+        <div class="modal-body">
+          <div v-if="deletedPostsNotifications.length > 0" class="notifications-list">
+            <div v-for="notification in deletedPostsNotifications" :key="notification.id" class="notification-item">
+              <div class="notification-header">
+                <span class="notification-icon-large">🗑️</span>
+                <div class="notification-info">
+                  <h4>Post Deleted by Moderator</h4>
+                  <p class="notification-date">{{ formatDate(notification.deleted_at) }}</p>
+                </div>
+              </div>
+              
+              <div class="notification-content">
+                <div class="deleted-post-content">
+                  <h5>Original Post Content:</h5>
+                  <p>{{ notification.content }}</p>
+                </div>
+                
+                <div class="deletion-reason">
+                  <strong>Reason for Deletion:</strong>
+                  <p>{{ notification.deletion_reason }}</p>
+                </div>
+                
+                <div class="deleted-by">
+                  <span>Deleted by: <strong>{{ notification.deleted_by_username }}</strong></span>
+                </div>
+              </div>
+              
+              <div class="notification-actions">
+                <button @click="markNotificationViewed(notification.id)" class="modal-button primary">
+                  Mark as Read
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div v-else class="empty-notifications">
+            <div class="empty-icon">✅</div>
+            <p>No new notifications</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button @click="showDeletedPostsModal = false" class="modal-button secondary">Close</button>
         </div>
       </div>
     </div>
@@ -298,6 +405,8 @@ export default {
       showLogoutModal: false,
       showCreatePostModal: false,
       showCommentModal: false,
+      showDeleteOwnPostModal: false,
+      showDeletedPostsModal: false,
       selectedPost: {},
       commentMode: 'my',
       newComment: '',
@@ -309,12 +418,22 @@ export default {
       loadingMyPosts: false,
       loadingExploreFeed: false,
       creatingPost: false,
-      submittingComment: false
+      submittingComment: false,
+      
+      // Delete own post
+      postToDeleteOwn: {},
+      ownDeletionReason: '',
+      deletingOwnPost: false,
+      
+      // Deleted posts notifications
+      deletedPostsCount: 0,
+      deletedPostsNotifications: []
     }
   },
   async mounted() {
     await this.loadMyPosts()
     await this.loadExploreFeed()
+    await this.checkDeletedPostsNotifications()
     
     // Add entrance animation
     setTimeout(() => {
@@ -388,67 +507,121 @@ export default {
     },
 
     async submitComment() {
-    if (!this.newComment.trim()) {
-    return
-  }
-  this.submittingComment = true
-  try {
-    const response = await userAPI.createComment({
-      text: this.newComment,
-      post_id: this.selectedPost.id
-    })
-    
-    // Handle different response scenarios
-    if (response.spam_detected) {
-      // SPAM BLOCKED - Show spam message
-      alert(response.spam_message || '🚫 Your comment has been detected as spam and hidden.')
-      this.newComment = '' // Clear the comment
-      this.closeCommentsModal()
+      if (!this.newComment.trim()) {
+        return
+      }
       
-    } else if (response.warning) {
-      // WARNING - Comment posted but user warned
-      alert(response.warning)
-      this.newComment = ''
-      await this.loadExploreFeed()
-      this.closeCommentsModal()
-      
-    } else if (response.visible_in_feed) {
-      // SUCCESS - Clean comment approved
-      alert('✅ Comment posted successfully!')
-      this.newComment = ''
-      await this.loadExploreFeed()
-      this.closeCommentsModal()
-      
-    } else if (response.auto_processed) {
-      // ABUSE DETECTED - Flagged for abuse (not spam)
-      alert('⚠️ Your comment has been flagged as potentially abusive and is under review.')
-      this.newComment = ''
-      this.closeCommentsModal()
-      
-    } else {
-      // PENDING REVIEW - Needs human moderation
-      alert('⏳ Your comment has been submitted for moderation review.')
-      this.newComment = ''
-      this.closeCommentsModal()
-    }
-    } catch (error) {
-    console.error('Error submitting comment:', error)
-    
-    // Check if error response contains spam/abuse info
-    if (error.response?.data?.detail) {
-      alert(error.response.data.detail)
-    } else {
-      alert('❌ Failed to post comment. Please try again.')
-    }
-  } finally {
-    this.submittingComment = false
-  }
-},
+      this.submittingComment = true
+      try {
+        const response = await userAPI.createComment({
+          text: this.newComment,
+          post_id: this.selectedPost.id
+        })
+        
+        if (response.spam_detected) {
+          alert(response.spam_message || '🚫 Your comment has been detected as spam and hidden.')
+          this.newComment = ''
+          this.closeCommentsModal()
+        } else if (response.warning) {
+          alert(response.warning)
+          this.newComment = ''
+          await this.loadExploreFeed()
+          this.closeCommentsModal()
+        } else if (response.visible_in_feed) {
+          alert('✅ Comment posted successfully!')
+          this.newComment = ''
+          await this.loadExploreFeed()
+          this.closeCommentsModal()
+        } else if (response.auto_processed) {
+          alert('⚠️ Your comment has been flagged as potentially abusive and is under review.')
+          this.newComment = ''
+          this.closeCommentsModal()
+        } else {
+          alert('⏳ Your comment has been submitted for moderation review.')
+          this.newComment = ''
+          this.closeCommentsModal()
+        }
+      } catch (error) {
+        console.error('Error submitting comment:', error)
+        if (error.response?.data?.detail) {
+          alert(error.response.data.detail)
+        } else {
+          alert('❌ Failed to post comment. Please try again.')
+        }
+      } finally {
+        this.submittingComment = false
+      }
+    },
 
     closeCommentsModal() {
       this.showCommentModal = false
       this.selectedPost = {}
       this.newComment = ''
+    },
+
+    // Delete own post methods
+    handleDeleteOwnPost(post) {
+      this.postToDeleteOwn = post
+      this.ownDeletionReason = ''
+      this.showDeleteOwnPostModal = true
+    },
+
+    closeDeleteOwnPostModal() {
+      this.showDeleteOwnPostModal = false
+      this.postToDeleteOwn = {}
+      this.ownDeletionReason = ''
+    },
+
+    async confirmDeleteOwnPost() {
+      if (!this.ownDeletionReason) {
+        alert('Please select a deletion reason')
+        return
+      }
+      
+      this.deletingOwnPost = true
+      try {
+        await userAPI.deleteOwnPost(this.postToDeleteOwn.id, this.ownDeletionReason)
+        
+        alert('✅ Post deleted successfully')
+        this.closeDeleteOwnPostModal()
+        await this.loadMyPosts()
+        
+      } catch (error) {
+        console.error('Error deleting own post:', error)
+        alert('Failed to delete post')
+      } finally {
+        this.deletingOwnPost = false
+      }
+    },
+
+    // Deleted posts notifications
+    async checkDeletedPostsNotifications() {
+      try {
+        const response = await userAPI.getDeletedPostsCount()
+        this.deletedPostsCount = response.count || 0
+      } catch (error) {
+        console.error('Error checking deleted posts:', error)
+      }
+    },
+
+    async loadDeletedPostsNotifications() {
+      try {
+        const notifications = await userAPI.getDeletedPostsNotifications()
+        this.deletedPostsNotifications = notifications
+        this.showDeletedPostsModal = true
+      } catch (error) {
+        console.error('Error loading deleted posts:', error)
+      }
+    },
+
+    async markNotificationViewed(deletedPostId) {
+      try {
+        await userAPI.markDeletedPostViewed(deletedPostId)
+        await this.loadDeletedPostsNotifications()
+        await this.checkDeletedPostsNotifications()
+      } catch (error) {
+        console.error('Error marking notification viewed:', error)
+      }
     },
 
     confirmLogout() {
@@ -464,11 +637,6 @@ export default {
         month: 'short',
         day: 'numeric'
       })
-    },
-
-    getVisibleCommentsCount(post) {
-    if (!post.comments) return 0
-    return post.comments.filter(comment => comment.status === 'approved').length
     }
   }
 }
@@ -551,9 +719,6 @@ export default {
   box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
-.logout-icon {
-  font-size: 16px;
-}
 
 /* Dashboard Layout */
 .dashboard-layout {
@@ -1365,5 +1530,183 @@ export default {
     width: 100%;
     justify-content: center;
   }
+}
+.notification-button {
+  position: relative;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+  padding: 10px 16px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-button:hover {
+  background: rgba(255,255,255,0.3);
+  transform: scale(1.1);
+}
+
+.notification-icon {
+  font-size: 20px;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #e74c3c;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.post-preview-box {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border-left: 4px solid #e74c3c;
+}
+
+.post-preview-box h4 {
+  margin: 0 0 12px 0;
+  color: #2c3e50;
+  font-size: 14px;
+}
+
+.post-preview-box p {
+  margin: 0;
+  color: #2c3e50;
+  line-height: 1.6;
+}
+
+.form-select {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: inherit;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.notification-item {
+  background: #f8f9fa;
+  border-radius: 16px;
+  padding: 24px;
+  border-left: 4px solid #e74c3c;
+}
+
+.notification-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.notification-icon-large {
+  font-size: 32px;
+}
+
+.notification-info h4 {
+  margin: 0 0 4px 0;
+  color: #2c3e50;
+  font-size: 18px;
+}
+
+.notification-date {
+  color: #7f8c8d;
+  font-size: 13px;
+  margin: 0;
+}
+
+.deleted-post-content {
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.deleted-post-content h5 {
+  margin: 0 0 8px 0;
+  color: #2c3e50;
+  font-size: 14px;
+}
+
+.deleted-post-content p {
+  margin: 0;
+  color: #5a6c7d;
+  line-height: 1.6;
+}
+
+.deletion-reason {
+  background: #fff3cd;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  border-left: 4px solid #f39c12;
+}
+
+.deletion-reason strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #856404;
+}
+
+.deletion-reason p {
+  margin: 0;
+  color: #856404;
+}
+
+.deleted-by {
+  font-size: 13px;
+  color: #7f8c8d;
+}
+
+.notification-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.empty-notifications {
+  text-align: center;
+  padding: 60px 20px;
+  color: #7f8c8d;
+}
+
+.empty-notifications .empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
 }
 </style>

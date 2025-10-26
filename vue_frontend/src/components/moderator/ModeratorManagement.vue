@@ -6,7 +6,6 @@
         <p class="section-subtitle">Manage moderator accounts (Admin Only)</p>
       </div>
       <div class="admin-badge">
-        <span class="badge-icon">👑</span>
         <span>Admin Panel</span>
       </div>
     </div>
@@ -108,6 +107,7 @@
         <div class="form-group">
           <label class="form-label">Suspension Reason:</label>
           <textarea
+            style="background-color: #f1efefff;"
             v-model="suspensionReason"
             class="form-textarea"
             rows="4"
@@ -160,6 +160,7 @@
         <div class="form-group">
           <label class="form-label">Deletion Reason:</label>
           <textarea
+            style="background-color: #f1efefff;"
             v-model="deletionReason"
             class="form-textarea"
             rows="4"
@@ -540,25 +541,61 @@ export default {
   font-weight: 600;
 }
 
-.warning-box, .danger-box {
+.warning-box {
   padding: 16px;
   border-radius: 12px;
   margin-top: 20px;
-}
-
-.warning-box {
   background: #fff3cd;
-  border: 1px solid #ffeaa7;
+  border: 1px solid #ffc107;
 }
 
-.danger-box {
-  background: #fadbd8;
-  border: 1px solid #e74c3c;
+.warning-box p {
+  color: #856404 !important;
+  font-weight: 600;
+  margin: 10px 0;
 }
 
-.warning-box ul, .danger-box ul {
+.warning-box ul {
   margin: 10px 0;
   padding-left: 20px;
+}
+
+.warning-box li {
+  color: #856404 !important;
+  margin: 5px 0;
+}
+
+/* Fix for danger box */
+.danger-box {
+  padding: 16px;
+  border-radius: 12px;
+  margin-top: 20px;
+  background: #f8d7da;
+  border: 1px solid #dc3545;
+}
+
+.danger-box p {
+  color: #721c24 !important;
+  font-weight: 600;
+  margin: 10px 0;
+}
+
+.danger-box ul {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.danger-box li {
+  color: #721c24 !important;
+  margin: 5px 0;
+}
+
+.danger-box strong {
+  color: #721c24 !important;
+}
+
+.modal-content p {
+  color: #2c3e50 !important;
 }
 
 .form-group {
@@ -568,7 +605,7 @@ export default {
 .form-label {
   display: block;
   font-weight: 600;
-  color: #2c3e50;
+  color: #ffffffff;
   margin-bottom: 8px;
 }
 
@@ -584,7 +621,7 @@ export default {
 .form-textarea:focus {
   outline: none;
   border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 1);
 }
 
 .loading-spinner-small {

@@ -98,17 +98,18 @@
             <div class="nav-indicator"></div>
           </div>
 
+          <!-- FIXED: Admin Panel - Show for admin username -->
           <div v-if="isAdmin"
-          class="nav-item" 
-          :class="{ active: activeTab === 'moderatorManagement' }" 
-          @click="switchTab('moderatorManagement')"
+            class="nav-item admin-item" 
+            :class="{ active: activeTab === 'moderatorManagement' }" 
+            @click="switchTab('moderatorManagement')"
           >
-          <div class="nav-icon"></div>
-          <div class="nav-content">
-          <span class="nav-text">Admin Panel</span>
-          <span class="nav-description">Manage moderators</span>
-          </div>
-          <div class="nav-indicator"></div>
+            <div class="nav-icon">👑</div>
+            <div class="nav-content">
+              <span class="nav-text">Admin Panel</span>
+              <span class="nav-description">Manage moderators</span>
+            </div>
+            <div class="nav-indicator"></div>
           </div>
         </nav>
       </aside>
@@ -120,6 +121,7 @@
           v-if="activeTab === 'allPosts'" 
           :users="users" 
           @view-comments="handleViewComments"
+          @delete-post="handleDeletePost"
         />
         
         <ReviewComments 
@@ -160,6 +162,57 @@
       @close="closeReviewModal"
       @review-comment="handleReviewComment"
     />
+
+    <!-- Delete Post Modal -->
+    <Modal
+      v-if="showDeletePostModal"
+      title="Delete Post"
+      size="medium"
+      type="modern"
+      :show-footer="true"
+      @close="closeDeletePostModal"
+    >
+      <div class="modal-content">
+        <p style="color: #e74c3c; font-weight: 600; margin-bottom: 20px;">
+          ⚠️ This action cannot be undone!
+        </p>
+        
+        <div class="post-preview-box">
+          <h4>Post Content:</h4>
+          <p>{{ postToDelete.content }}</p>
+          <span class="post-meta-text">By: {{ postToDelete.author_username }}</span>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Select Deletion Reason:</label>
+          <select v-model="deletionReason" class="form-select">
+            <option value="">-- Select a reason --</option>
+            <option value="Spam or promotional content">Spam or promotional content</option>
+            <option value="Harassment or bullying">Harassment or bullying</option>
+            <option value="Hate speech or discrimination">Hate speech or discrimination</option>
+            <option value="Misinformation or false content">Misinformation or false content</option>
+            <option value="Inappropriate or offensive content">Inappropriate or offensive content</option>
+            <option value="Violence or threats">Violence or threats</option>
+            <option value="Copyright or intellectual property violation">Copyright violation</option>
+            <option value="Off-topic or irrelevant">Off-topic or irrelevant</option>
+            <option value="User requested deletion">User requested deletion</option>
+            <option value="Other policy violation">Other policy violation</option>
+          </select>
+        </div>
+      </div>
+      
+      <template #footer>
+        <button @click="closeDeletePostModal" class="modal-button secondary">Cancel</button>
+        <button 
+          @click="confirmDeletePost" 
+          class="modal-button danger"
+          :disabled="!deletionReason || deletingPost"
+        >
+          <span v-if="deletingPost" class="loading-spinner-small"></span>
+          {{ deletingPost ? 'Deleting...' : 'Delete Post' }}
+        </button>
+      </template>
+    </Modal>
 
     <!-- Logout Modal -->
     <Modal
@@ -212,6 +265,7 @@ export default {
       // Modal states
       showReviewModal: false,
       showLogoutModal: false,
+      showDeletePostModal: false,
       
       // Review modal data
       selectedPost: {},
@@ -219,6 +273,11 @@ export default {
       modalTitle: 'Review Comments',
       sectionTitle: 'Comments for Review',
       showReviewActions: true,
+      
+      // Delete post data
+      postToDelete: {},
+      deletionReason: '',
+      deletingPost: false,
       
       // Users list for dropdowns
       users: [],
@@ -231,7 +290,11 @@ export default {
   },
   
   async mounted() {
-    this.isAdmin = this.user.role === 'admin'
+    // FIXED: Check if username is 'admin' (not just role)
+    this.isAdmin = this.user.username === 'admin'
+    console.log('User:', this.user)
+    console.log('Is Admin:', this.isAdmin)
+    
     await this.loadInitialData()
     
     // Add entrance animation
@@ -309,8 +372,44 @@ export default {
     },
     
     handleViewFlaggedComments(postId) {
-      // Similar to view comments but focused on flagged ones
       this.handleViewComments(postId)
+    },
+    
+    handleDeletePost(post) {
+      this.postToDelete = post
+      this.deletionReason = ''
+      this.showDeletePostModal = true
+    },
+    
+    closeDeletePostModal() {
+      this.showDeletePostModal = false
+      this.postToDelete = {}
+      this.deletionReason = ''
+    },
+    
+    async confirmDeletePost() {
+      if (!this.deletionReason) {
+        alert('Please select a deletion reason')
+        return
+      }
+      
+      this.deletingPost = true
+      try {
+        const response = await moderatorAPI.deletePost(this.postToDelete.id, this.deletionReason)
+        
+        alert(`✅ ${response.message}`)
+        this.closeDeletePostModal()
+        
+        // Reload posts
+        this.$emit('reload-posts')
+        window.location.reload()
+        
+      } catch (error) {
+        console.error('Error deleting post:', error)
+        alert(error.response?.data?.detail || 'Failed to delete post')
+      } finally {
+        this.deletingPost = false
+      }
     },
     
     closeReviewModal() {
@@ -501,6 +600,20 @@ export default {
   color: white;
 }
 
+.nav-item.admin-item {
+  border-top: 2px solid #e9ecef;
+  margin-top: 20px;
+  padding-top: 20px;
+}
+
+.nav-item.admin-item:hover {
+  background: rgba(243, 156, 18, 0.1);
+}
+
+.nav-item.admin-item.active {
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+}
+
 .nav-icon {
   font-size: 20px;
   width: 24px;
@@ -556,6 +669,62 @@ export default {
   background: rgba(255,255,255,0.5);
 }
 
+/* Modal Content Styles */
+.post-preview-box {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border-left: 4px solid #e74c3c;
+}
+
+.post-preview-box h4 {
+  margin: 0 0 12px 0;
+  color: #2c3e50;
+  font-size: 14px;
+}
+
+.post-preview-box p {
+  margin: 0 0 12px 0;
+  color: #2c3e50;
+  line-height: 1.6;
+}
+
+.post-meta-text {
+  font-size: 12px;
+  color: #7f8c8d;
+  font-style: italic;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.form-select {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: inherit;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
 /* Modal Buttons */
 .modal-button {
   padding: 12px 24px;
@@ -583,9 +752,28 @@ export default {
   color: white;
 }
 
-.modal-button.danger:hover {
+.modal-button.danger:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+}
+
+.modal-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.loading-spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* Responsive Design */
