@@ -97,6 +97,19 @@
             </div>
             <div class="nav-indicator"></div>
           </div>
+
+          <div v-if="isAdmin"
+          class="nav-item" 
+          :class="{ active: activeTab === 'moderatorManagement' }" 
+          @click="switchTab('moderatorManagement')"
+          >
+          <div class="nav-icon"></div>
+          <div class="nav-content">
+          <span class="nav-text">Admin Panel</span>
+          <span class="nav-description">Manage moderators</span>
+          </div>
+          <div class="nav-indicator"></div>
+          </div>
         </nav>
       </aside>
 
@@ -128,6 +141,10 @@
         
         <UserManagement 
           v-if="activeTab === 'userList'" 
+        />
+
+        <ModeratorManagement 
+          v-if="activeTab === 'moderatorManagement' && isAdmin" 
         />
       </main>
     </div>
@@ -172,6 +189,7 @@ import Statistics from '@/components/moderator/Statistics.vue'
 import UserManagement from '@/components/moderator/UserManagement.vue'
 import ReviewModal from '@/components/moderator/ReviewModal.vue'
 import Modal from '@/components/common/Modal.vue'
+import ModeratorManagement from '@/components/moderator/ModeratorManagement.vue'
 
 export default {
   name: 'ModeratorDashboard',
@@ -182,6 +200,7 @@ export default {
     Statistics,
     UserManagement,
     ReviewModal,
+    ModeratorManagement,
     Modal
   },
   data() {
@@ -204,12 +223,15 @@ export default {
       // Users list for dropdowns
       users: [],
       
+      isAdmin: false,
+
       // Computed values
       pendingReviewCount: 0
     }
   },
   
   async mounted() {
+    this.isAdmin = this.user.role === 'admin'
     await this.loadInitialData()
     
     // Add entrance animation

@@ -28,7 +28,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
-      localStorage.removeItem('user') // Fixed typo here
+      localStorage.removeItem('user')
       window.location.href = '/login'
     }
     return Promise.reject(error)
@@ -125,6 +125,33 @@ export const moderatorAPI = {
     const response = await api.put(`/api/moderator/comments/${commentId}/review`, {
       action,
       reason
+    })
+    return response.data
+  }
+}
+
+// ==================== ADMIN API ====================
+// Only accessible when username === 'admin'
+
+export const adminAPI = {
+  async getAllModerators() {
+    const response = await api.get('/api/admin/moderators')
+    return response.data
+  },
+
+  async suspendModerator(moderatorId, data) {
+    const response = await api.put(`/api/admin/moderators/${moderatorId}/suspend`, data)
+    return response.data
+  },
+
+  async unsuspendModerator(moderatorId) {
+    const response = await api.put(`/api/admin/moderators/${moderatorId}/unsuspend`)
+    return response.data
+  },
+
+  async deleteModerator(moderatorId, data) {
+    const response = await api.delete(`/api/admin/moderators/${moderatorId}`, {
+      data: data
     })
     return response.data
   }
