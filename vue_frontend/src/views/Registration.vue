@@ -10,9 +10,9 @@
     <div class="registration-card">
       <div class="registration-header">
         <div class="logo-container">
-          <div class="logo-icon"></div>
+          <div class="logo-icon">🛡️</div>
           <h1 class="registration-title">Join Our Platform</h1>
-          <p class="registration-subtitle">Create your  account</p>
+          <p class="registration-subtitle">Create your account</p>
         </div>
       </div>
       
@@ -26,8 +26,8 @@
               placeholder="Choose a unique username"
               class="form-input"
               required
+              autocomplete="username"
             />
-            <div class="input-icon"></div>
           </div>
         </div>
         
@@ -40,8 +40,8 @@
               placeholder="Enter your email address"
               class="form-input"
               required
+              autocomplete="email"
             />
-            <div class="input-icon"></div>
           </div>
         </div>
         
@@ -54,8 +54,8 @@
               placeholder="Create a strong password"
               class="form-input"
               required
+              autocomplete="new-password"
             />
-            <div class="input-icon"></div>
           </div>
         </div>
         
@@ -67,7 +67,6 @@
               :class="{ active: formData.role === 'user' }"
               @click="formData.role = 'user'"
             >
-              <div class="role-icon"></div>
               <div class="role-info">
                 <h3>Regular User</h3>
                 <p>Create posts and comments</p>
@@ -80,7 +79,6 @@
               :class="{ active: formData.role === 'moderator' }"
               @click="formData.role = 'moderator'"
             >
-              <div class="role-icon"></div>
               <div class="role-info">
                 <h3>Moderator</h3>
                 <p>Manage content and users</p>
@@ -131,7 +129,7 @@ export default {
   },
   mounted() {
     setTimeout(() => {
-      document.querySelector('.registration-card').classList.add('animate-in')
+      document.querySelector('.registration-card')?.classList.add('animate-in')
     }, 100)
   },
   methods: {
@@ -139,17 +137,56 @@ export default {
       this.loading = true
       this.error = ''
       
+      // Validate inputs
+      if (!this.formData.username.trim()) {
+        this.error = 'Username is required'
+        this.loading = false
+        return
+      }
+      
+      if (!this.formData.email.trim()) {
+        this.error = 'Email is required'
+        this.loading = false
+        return
+      }
+      
+      if (!this.formData.password.trim()) {
+        this.error = 'Password is required'
+        this.loading = false
+        return
+      }
+      
+      if (this.formData.password.length < 6) {
+        this.error = 'Password must be at least 6 characters'
+        this.loading = false
+        return
+      }
+      
       try {
-        const response = await authAPI.register(this.formData)
+        console.log('Attempting registration with:', {
+          username: this.formData.username,
+          email: this.formData.email,
+          role: this.formData.role
+        })
         
+        // Register the user
+        const response = await authAPI.register(this.formData)
+        console.log('Registration successful:', response)
+        
+        // Auto-login after registration
+        console.log('Attempting auto-login...')
         const loginResponse = await authAPI.login({
           username: this.formData.username,
           password: this.formData.password
         })
         
+        console.log('Login successful:', loginResponse)
+        
+        // Store auth data
         localStorage.setItem('token', loginResponse.access_token)
         localStorage.setItem('user', JSON.stringify(loginResponse.user))
         
+        // Redirect based on role
         if (loginResponse.user.role === 'moderator') {
           this.$router.push('/mod-dashboard')
         } else {
@@ -157,8 +194,30 @@ export default {
         }
         
       } catch (error) {
-        this.error = error.response?.data?.detail || 'Registration failed. Please try again.'
-        console.error('Registration error:', error)
+        console.error('Registration/Login error:', error)
+        console.error('Error response:', error.response)
+        
+        // Handle specific error cases
+        if (error.response) {
+          // Server responded with error
+          const errorMsg = error.response.data?.detail
+          
+          if (typeof errorMsg === 'string') {
+            this.error = errorMsg
+          } else if (Array.isArray(errorMsg)) {
+            // Validation errors from FastAPI
+            this.error = errorMsg.map(e => e.msg).join(', ')
+          } else {
+            this.error = 'Registration failed. Please try again.'
+          }
+        } else if (error.request) {
+          // Request made but no response
+          this.error = 'Cannot connect to server. Please check if the API is running.'
+          console.error('API connection error - is the backend running on http://localhost:8001?')
+        } else {
+          // Something else went wrong
+          this.error = 'An unexpected error occurred. Please try again.'
+        }
       } finally {
         this.loading = false
       }
