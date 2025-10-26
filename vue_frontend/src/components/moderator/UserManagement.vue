@@ -34,7 +34,8 @@
             <tr>
               <th>User ID</th>
               <th>Username</th>
-              <th>Status</th>
+              <th>Account Status</th>
+              <th>Last Activity</th>
               <th>Posts</th>
               <th>Comments</th>
               <th>Flagged</th>
@@ -54,8 +55,14 @@
               </td>
               <td class="status">
                 <span class="status-badge" :class="user.is_active ? 'active' : 'inactive'">
-                  {{ user.is_active ? 'Active' : 'Inactive' }}
+                  {{ user.is_active ? 'Active' : 'Disabled' }}
                 </span>
+              </td>
+              <td class="last-activity">
+                <div class="activity-cell">
+                  <span class="activity-indicator" :class="user.is_recently_active ? 'online' : 'offline'"></span>
+                  <span class="activity-text">{{ user.last_activity }}</span>
+                </div>
               </td>
               <td class="posts-count">{{ user.total_posts || 0 }}</td>
               <td class="comments-count">{{ user.total_comments || 0 }}</td>
@@ -302,6 +309,39 @@ export default {
 .status-badge.inactive {
   background: rgba(231, 76, 60, 0.1);
   color: #e74c3c;
+}
+
+/* NEW: Activity Status Styling */
+.activity-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.activity-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.activity-indicator.online {
+  background: #27ae60;
+  box-shadow: 0 0 8px rgba(39, 174, 96, 0.5);
+  animation: pulse-online 2s infinite;
+}
+
+.activity-indicator.offline {
+  background: #95a5a6;
+}
+
+@keyframes pulse-online {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.activity-text {
+  color: #7f8c8d;
+  font-size: 13px;
 }
 
 .flagged-number {
