@@ -156,6 +156,13 @@ export const moderatorAPI = {
       data: { reason }
     })
     return response.data
+  },
+
+  async deleteUser(userId, reason) {
+    const response = await api.delete(`/api/moderator/users/${userId}`, {
+      data: { reason }
+    })
+    return response.data
   }
 }
 
