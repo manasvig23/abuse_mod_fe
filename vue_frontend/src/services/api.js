@@ -31,6 +31,22 @@ api.interceptors.response.use(
       localStorage.removeItem('user')
       window.location.href = '/login'
     }
+    //Handle suspension (403 with suspension message)
+    if (error.response?.status === 403) {
+      const detail = error.response?.data?.detail || ''
+      if (detail.includes('suspended') || detail.includes('Account suspended')) {
+        // Clear storage and redirect to login
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        
+        // Show custom alert with proper title
+        alert('SafeSpace says:\n\n' + detail)
+        
+        // Redirect to login
+        window.location.href = '/login'
+        return Promise.reject(error)
+      }
+    }
     return Promise.reject(error)
   }
 )

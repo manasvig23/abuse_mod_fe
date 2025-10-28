@@ -410,36 +410,36 @@ export default {
       selectedPost: {},
       commentMode: 'my',
       newComment: '',
-      newPost: {
-        content: ''
-      },
+      newPost: { content: '' },
       myPosts: [],
       explorePosts: [],
       loadingMyPosts: false,
       loadingExploreFeed: false,
       creatingPost: false,
       submittingComment: false,
-      
+
       // Delete own post
       postToDeleteOwn: {},
       ownDeletionReason: '',
       deletingOwnPost: false,
-      
+
       // Deleted posts notifications
       deletedPostsCount: 0,
       deletedPostsNotifications: []
     }
   },
+
   async mounted() {
     await this.loadMyPosts()
     await this.loadExploreFeed()
     await this.checkDeletedPostsNotifications()
-    
-    // Add entrance animation
+
+    // Entrance animation
     setTimeout(() => {
       document.querySelector('.main-content').classList.add('animate-in')
     }, 200)
   },
+
   methods: {
     switchTab(tab) {
       this.activeTab = tab
@@ -470,19 +470,13 @@ export default {
     },
 
     async createPost() {
-      if (!this.newPost.content.trim()) {
-        return
-      }
+      if (!this.newPost.content.trim()) return
 
       this.creatingPost = true
       try {
-        await userAPI.createPost({
-          content: this.newPost.content
-        })
-        
+        await userAPI.createPost({ content: this.newPost.content })
         await this.loadMyPosts()
         this.cancelCreatePost()
-        
       } catch (error) {
         console.error('Error creating post:', error)
         alert('Failed to create post. Please try again.')
@@ -507,46 +501,46 @@ export default {
     },
 
     async submitComment() {
-      if (!this.newComment.trim()) {
-        return
-      }
-      
+      if (!this.newComment.trim()) return
+
       this.submittingComment = true
       try {
         const response = await userAPI.createComment({
           text: this.newComment,
           post_id: this.selectedPost.id
         })
-        
-        if (response.spam_detected) {
-          alert(response.spam_message || '🚫 Your comment has been detected as spam and hidden.')
-          this.newComment = ''
-          this.closeCommentsModal()
-        } else if (response.warning) {
-          alert(response.warning)
-          this.newComment = ''
-          await this.loadExploreFeed()
-          this.closeCommentsModal()
-        } else if (response.visible_in_feed) {
-          alert('✅ Comment posted successfully!')
-          this.newComment = ''
-          await this.loadExploreFeed()
-          this.closeCommentsModal()
-        } else if (response.auto_processed) {
-          alert('⚠️ Your comment has been flagged as potentially abusive and is under review.')
-          this.newComment = ''
-          this.closeCommentsModal()
-        } else {
-          alert('⏳ Your comment has been submitted for moderation review.')
-          this.newComment = ''
-          this.closeCommentsModal()
+
+        // User suspension handling
+        if (response.user_suspended) {
+          alert('SafeSpace says:\n\nYour account has been suspended due to high abuse rate. You will be logged out.')
+          localStorage.removeItem('token')
+          localStorage.removeItem('user')
+          this.$router.push('/login')
+          return
         }
+
+        // Comment filtering cases
+        if (response.spam_detected) {
+          alert('SafeSpace says:\n\n' + (response.spam_message || '🚫 Your comment has been detected as spam and hidden.'))
+        } else if (response.warning) {
+          alert('SafeSpace says:\n\n' + response.warning)
+        } else if (response.visible_in_feed) {
+          alert('SafeSpace says:\n\n✅ Comment posted successfully!')
+        } else if (response.auto_processed) {
+          alert('SafeSpace says:\n\n⚠️ Your comment has been flagged as potentially abusive and is under review.')
+        } else {
+          alert('SafeSpace says:\n\n⏳ Your comment has been submitted for moderation review.')
+        }
+
+        this.newComment = ''
+        this.closeCommentsModal()
+        await this.loadExploreFeed()
       } catch (error) {
         console.error('Error submitting comment:', error)
         if (error.response?.data?.detail) {
-          alert(error.response.data.detail)
+          alert('SafeSpace says:\n\n' + error.response.data.detail)
         } else {
-          alert('❌ Failed to post comment. Please try again.')
+          alert('SafeSpace says:\n\n❌ Failed to post comment. Please try again.')
         }
       } finally {
         this.submittingComment = false
@@ -559,7 +553,7 @@ export default {
       this.newComment = ''
     },
 
-    // Delete own post methods
+    // --- Delete own post ---
     handleDeleteOwnPost(post) {
       this.postToDeleteOwn = post
       this.ownDeletionReason = ''
@@ -577,15 +571,13 @@ export default {
         alert('Please select a deletion reason')
         return
       }
-      
+
       this.deletingOwnPost = true
       try {
         await userAPI.deleteOwnPost(this.postToDeleteOwn.id, this.ownDeletionReason)
-        
         alert('✅ Post deleted successfully')
         this.closeDeleteOwnPostModal()
         await this.loadMyPosts()
-        
       } catch (error) {
         console.error('Error deleting own post:', error)
         alert('Failed to delete post')
@@ -594,7 +586,7 @@ export default {
       }
     },
 
-    // Deleted posts notifications
+    // --- Deleted posts notifications ---
     async checkDeletedPostsNotifications() {
       try {
         const response = await userAPI.getDeletedPostsCount()
