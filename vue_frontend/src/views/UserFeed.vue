@@ -510,26 +510,24 @@ export default {
           post_id: this.selectedPost.id
         })
 
-        // User suspension handling
         if (response.user_suspended) {
-          alert('SafeSpace says:\n\nYour account has been suspended due to high abuse rate. You will be logged out.')
+          alert('Your account has been suspended due to high abuse rate. You will be logged out.')
           localStorage.removeItem('token')
           localStorage.removeItem('user')
           this.$router.push('/login')
           return
         }
 
-        // Comment filtering cases
         if (response.spam_detected) {
-          alert('SafeSpace says:\n\n' + (response.spam_message || '🚫 Your comment has been detected as spam and hidden.'))
+          alert(response.spam_message || '🚫 Your comment has been detected as spam and hidden.')
         } else if (response.warning) {
-          alert('SafeSpace says:\n\n' + response.warning)
+          alert(response.warning)
         } else if (response.visible_in_feed) {
-          alert('SafeSpace says:\n\n✅ Comment posted successfully!')
+          alert('✅ Comment posted successfully!')
         } else if (response.auto_processed) {
-          alert('SafeSpace says:\n\n⚠️ Your comment has been flagged as potentially abusive and is under review.')
+          alert('⚠️ Your comment has been hidden since it was found to be abusive.')
         } else {
-          alert('SafeSpace says:\n\n⏳ Your comment has been submitted for moderation review.')
+          alert('⏳ Your comment has been submitted for moderation review.')
         }
 
         this.newComment = ''
@@ -538,9 +536,9 @@ export default {
       } catch (error) {
         console.error('Error submitting comment:', error)
         if (error.response?.data?.detail) {
-          alert('SafeSpace says:\n\n' + error.response.data.detail)
+          alert(error.response.data.detail)
         } else {
-          alert('SafeSpace says:\n\n❌ Failed to post comment. Please try again.')
+          alert('❌ Failed to post comment. Please try again.')
         }
       } finally {
         this.submittingComment = false
